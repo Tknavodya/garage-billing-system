@@ -1,0 +1,13 @@
+.layout-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    /* Width of sidebar */
+    background-color: #f1f5f9;
+    padding: 2rem;
+    min-height: 100vh;
+}
