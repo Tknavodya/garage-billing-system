@@ -7,7 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.contrib.auth import authenticate
-import logging\nfrom .models import User
+import logging
+from .models import User
 from .serializers import (
     CustomTokenObtainPairSerializer,
     UserLoginSerializer,
@@ -20,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class LoginThrottle(AnonRateThrottle):
-    \"\"\"Custom throttle for login attempts.\"\"\"\n    scope = 'login'
+    """Custom throttle for login attempts."""
+    scope = 'login'
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
