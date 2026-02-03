@@ -11,9 +11,21 @@
     margin: 0;
 }
 
+/* Actions Bar */
+.actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
 .search-bar {
     position: relative;
-    margin-bottom: 2rem;
+    width: 350px;
 }
 
 .search-icon {
@@ -130,7 +142,135 @@
     color: #475569;
 }
 
-.text-red {
-    color: #ef4444;
-    font-weight: 500;
+
+/* Form Styling */
+.customer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+.add-item-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.item-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.added-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.added-item .price {
+    font-weight: 600;
+    margin-left: auto;
+    margin-right: 1rem;
+}
+
+.invoice-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.invoice-total .amount {
+    color: #2563eb;
+    font-size: 1.25rem;
+}
+
+/* Form Styles */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #1e293b;
+    background-color: #fff;
+    transition: all 0.2s;
+    height: 38px; /* Fixed height for consistency */
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+/* Add Item Row refinement */
+.add-item-row {
+    display: flex;
+    align-items: flex-end; /* Align bottom with inputs */
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.add-item-row .secondary-btn {
+    height: 38px;
+    padding: 0 1.25rem;
+    display: flex;
+    align-items: center;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.add-item-row .secondary-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
 }

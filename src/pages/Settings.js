@@ -1,28 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../components/shared/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input, Label } from '../components/ui/input';
-import { Switch } from '../components/ui/switch';
-import { Separator } from '../components/ui/separator';
 import { useToast } from '../hooks/use-toast';
+import Modal from '../components/common/Modal';
+import { api } from '../utils/api';
 import './Settings.css';
 
 const Settings = () => {
   const { toast } = useToast();
-  const [garageName, setGarageName] = useState('AutoGarage');
-  const [email, setEmail] = useState('support@autogarage.com');
-  const [phone, setPhone] = useState('+1 (555) 000-0000');
-  const [address, setAddress] = useState('123 Garage Street, New York, NY 10001');
-  const [taxRate, setTaxRate] = useState('8');
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [overdueReminders, setOverdueReminders] = useState(true);
+  
+  // Business Info State
+  const [garageSettings, setGarageSettings] = useState({
+      garage_name: '',
+      email: '',
+      phone: '',
+      address: ''
+  });
 
-  const handleSave = () => {
-    toast({
-      title: 'Settings Saved',
-      description: 'Your changes have been saved successfully.',
-    });
+  // Account State
+  const [user, setUser] = useState({
+      name: '',
+      email: ''
+  });
+
+  // Password Change State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwords, setPasswords] = useState({
+      old_password: '',
+      new_password: '',
+      confirm_password: ''
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+     fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+      try {
+          const [settingsData, userData] = await Promise.all([
+              api.get('/settings/'),
+              api.get('/users/me/')
+          ]);
+
+          if (settingsData) setGarageSettings(settingsData);
+          if (userData) setUser({ name: userData.name, email: userData.email });
+
+      } catch (err) {
+          console.error("Failed to fetch settings", err);
+      }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+        await Promise.all([
+            api.put('/settings/', garageSettings),
+            api.put('/users/update_profile/', user)
+        ]);
+
+        toast({
+            title: 'Settings Saved',
+            description: 'Your changes have been saved successfully.',
+        });
+
+    } catch (err) {
+        toast({
+            title: 'Error',
+            description: 'Failed to save settings.',
+            variant: 'destructive'
+        });
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+      e.preventDefault();
+      if (passwords.new_password !== passwords.confirm_password) {
+          alert("New passwords do not match");
+          return;
+      }
+      
+      try {
+          await api.post('/users/change_password/', {
+              old_password: passwords.old_password,
+              new_password: passwords.new_password,
+              new_password_confirm: passwords.confirm_password
+          });
+
+          alert("Password changed successfully");
+          setIsPasswordModalOpen(false);
+          setPasswords({ old_password: '', new_password: '', confirm_password: '' });
+      } catch (err) {
+          alert(err.message || "Failed to change password");
+      }
   };
 
   return (
@@ -42,122 +117,38 @@ const Settings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="form-stack">
-            <div className="form-group">
+            <div className="form-group half-width">
               <Label htmlFor="garageName">Garage Name</Label>
               <Input
                 id="garageName"
-                value={garageName}
-                onChange={(e) => setGarageName(e.target.value)}
+                value={garageSettings.garage_name}
+                onChange={(e) => setGarageSettings({...garageSettings, garage_name: e.target.value})}
               />
             </div>
-            <div className="form-group">
+            <div className="form-group half-width">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={garageSettings.email}
+                onChange={(e) => setGarageSettings({...garageSettings, email: e.target.value})}
               />
             </div>
-            <div className="form-group">
+            <div className="form-group half-width">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={garageSettings.phone}
+                onChange={(e) => setGarageSettings({...garageSettings, phone: e.target.value})}
               />
             </div>
             <div className="form-group">
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                value={garageSettings.address}
+                onChange={(e) => setGarageSettings({...garageSettings, address: e.target.value})}
               />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Invoice Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Settings</CardTitle>
-            <CardDescription>
-              Configure invoice generation preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="form-stack">
-            <div className="form-group">
-              <Label htmlFor="taxRate">Tax Rate (%)</Label>
-              <Input
-                id="taxRate"
-                type="number"
-                value={taxRate}
-                onChange={(e) => setTaxRate(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <Label htmlFor="invoicePrefix">Invoice Prefix</Label>
-              <Input
-                id="invoicePrefix"
-                defaultValue="INV"
-                placeholder="INV"
-              />
-            </div>
-            <div className="form-group">
-              <Label htmlFor="paymentTerms">Payment Terms (days)</Label>
-              <Input
-                id="paymentTerms"
-                type="number"
-                defaultValue="14"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>
-              Manage email and system notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="notifications-stack">
-            <div className="notification-item">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive email updates for new invoices and payments
-                </p>
-              </div>
-              <Switch
-                checked={emailNotifications}
-                onCheckedChange={setEmailNotifications}
-              />
-            </div>
-            <Separator />
-            <div className="notification-item">
-              <div>
-                <p className="font-medium">Overdue Reminders</p>
-                <p className="text-sm text-muted-foreground">
-                  Send automatic reminders for overdue invoices
-                </p>
-              </div>
-              <Switch
-                checked={overdueReminders}
-                onCheckedChange={setOverdueReminders}
-              />
-            </div>
-            <Separator />
-            <div className="notification-item">
-              <div>
-                <p className="font-medium">Low Stock Alerts</p>
-                <p className="text-sm text-muted-foreground">
-                  Get notified when parts inventory is low
-                </p>
-              </div>
-              <Switch defaultChecked />
             </div>
           </CardContent>
         </Card>
@@ -171,22 +162,24 @@ const Settings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="form-stack">
-            <div className="form-group">
+            <div className="form-group half-width">
               <Label htmlFor="adminName">Admin Name</Label>
               <Input
                 id="adminName"
-                defaultValue="Admin User"
+                value={user.name}
+                onChange={(e) => setUser({...user, name: e.target.value})}
               />
             </div>
-            <div className="form-group">
+            <div className="form-group half-width">
               <Label htmlFor="adminEmail">Admin Email</Label>
               <Input
                 id="adminEmail"
                 type="email"
-                defaultValue="admin@autogarage.com"
+                value={user.email}
+                onChange={(e) => setUser({...user, email: e.target.value})}
               />
             </div>
-            <Button variant="outline" className="w-full">
+            <Button className="w-full mt-4 primary-blue-btn" onClick={() => setIsPasswordModalOpen(true)}>
               Change Password
             </Button>
           </CardContent>
@@ -194,10 +187,53 @@ const Settings = () => {
       </div>
 
       <div className="settings-actions">
-        <Button onClick={handleSave} size="lg">
-          Save Changes
+        <Button onClick={handleSave} size="lg" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
+
+      <Modal 
+          isOpen={isPasswordModalOpen} 
+          onClose={() => setIsPasswordModalOpen(false)} 
+          title="Change Password"
+      >
+          <form onSubmit={handleChangePassword} className="form-stack" style={{marginTop: '1rem'}}>
+              <div className="form-group">
+                  <Label>Current Password</Label>
+                  <Input 
+                      type="password" 
+                      autoComplete="current-password"
+                      value={passwords.old_password}
+                      onChange={e => setPasswords({...passwords, old_password: e.target.value})}
+                      required
+                  />
+              </div>
+              <div className="form-group">
+                  <Label>New Password</Label>
+                  <Input 
+                      type="password" 
+                      autoComplete="new-password"
+                      value={passwords.new_password}
+                      onChange={e => setPasswords({...passwords, new_password: e.target.value})}
+                      required
+                  />
+              </div>
+              <div className="form-group">
+                  <Label>Confirm New Password</Label>
+                  <Input 
+                      type="password" 
+                      autoComplete="new-password"
+                      value={passwords.confirm_password}
+                      onChange={e => setPasswords({...passwords, confirm_password: e.target.value})}
+                      required
+                  />
+              </div>
+              <div style={{display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem'}}>
+                  <Button type="button" variant="outline" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+                  <Button type="submit">Update Password</Button>
+              </div>
+          </form>
+      </Modal>
     </div>
   );
 };

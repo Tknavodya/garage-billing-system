@@ -39,7 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('staff', 'Staff'),
     ]
     
-    id = models.AutoField(primary_key=True)
+    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
     password_hash = models.CharField(max_length=255, db_column='password_hash')

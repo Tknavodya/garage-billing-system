@@ -1,47 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, User } from 'lucide-react';
-import { useData } from '../context/DataContext';
 import Modal from '../components/common/Modal';
+import CustomerHistoryModal from '../components/customers/CustomerHistoryModal';
 import './Customers.css';
 
+import { api } from '../utils/api';
+
 const Customers = () => {
-  const { customers, addCustomer } = useData();
+  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '', address: '' });
+  
+  // History Modal State
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.phone.includes(searchTerm) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const fetchCustomers = useCallback(async (query = '') => {
+    setLoading(true);
+    try {
+      const endpoint = query 
+        ? `/customers/?search=${encodeURIComponent(query)}` 
+        : '/customers/';
+      
+      const data = await api.get(endpoint);
+      setCustomers(data);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching customers:', err);
+      // Determine if it's a network error or API error
+      setError('Failed to fetch customers');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchCustomers(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchCustomers]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addCustomer(newCustomer);
-    setNewCustomer({ name: '', phone: '', email: '' });
-    setIsModalOpen(false);
+    try {
+      await api.post('/customers/', newCustomer);
+      setNewCustomer({ name: '', phone: '', email: '', address: '' });
+      setIsModalOpen(false);
+      fetchCustomers(searchTerm); // Refresh list
+    } catch (err) {
+      alert('Failed to add customer: ' + err.message);
+    }
+  };
+
+  const handleViewHistory = (customerId) => {
+      setSelectedCustomerId(customerId);
+      setIsHistoryModalOpen(true);
   };
 
   return (
-    <div className="customers-page">
+    <div className="customers-page animate-fade-in">
       <div className="page-header">
         <h1>Customers</h1>
+      </div>
+
+      <div className="actions-bar">
+        <div className="search-bar">
+          <Search size={20} className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search customers..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
           <Plus size={18} />
           Add Customer
         </button>
       </div>
 
-      <div className="search-bar">
-        <Search size={20} className="search-icon" />
-        <input 
-          type="text" 
-          placeholder="Search customers by name, phone, or email..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      {loading && <div className="loading">Loading...</div>}
+      {error && <div className="error">{error}</div>}
 
       <div className="customers-table">
         <table>
@@ -54,7 +99,7 @@ const Customers = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredCustomers.map(customer => (
+            {customers.map(customer => (
               <tr key={customer.id}>
                 <td>
                   <div className="user-info">
@@ -66,16 +111,28 @@ const Customers = () => {
                 </td>
                 <td>
                   <div className="contact-info">
-                    <span>{customer.phone}</span>
-                    <span className="email">{customer.email}</span>
+                    <span>{customer.phone || 'N/A'}</span>
+                    <span className="email">{customer.email || 'N/A'}</span>
                   </div>
                 </td>
                 <td>{customer.visits}</td>
                 <td>
-                  <button className="text-btn">View History</button>
+                  <button 
+                    className="text-btn" 
+                    onClick={() => handleViewHistory(customer.id)}
+                  >
+                    View History
+                  </button>
                 </td>
               </tr>
             ))}
+            {!loading && customers.length === 0 && (
+              <tr>
+                <td colSpan="4" style={{textAlign: 'center', padding: '20px'}}>
+                  No customers found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -92,14 +149,15 @@ const Customers = () => {
               required 
               value={newCustomer.name}
               onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}
+              placeholder="Enter full name"
             />
           </div>
           <div className="form-group">
             <label>Phone Number</label>
             <input 
-              required 
               value={newCustomer.phone}
               onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})}
+              placeholder="Enter phone number"
             />
           </div>
           <div className="form-group">
@@ -108,6 +166,17 @@ const Customers = () => {
               type="email"
               value={newCustomer.email}
               onChange={e => setNewCustomer({...newCustomer, email: e.target.value})}
+              placeholder="Enter email address"
+            />
+          </div>
+          <div className="form-group">
+            <label>Address</label>
+            <textarea 
+              value={newCustomer.address}
+              onChange={e => setNewCustomer({...newCustomer, address: e.target.value})}
+              placeholder="Enter address (optional)"
+              rows="2"
+              style={{width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd'}}
             />
           </div>
           <div className="modal-actions">
@@ -116,6 +185,12 @@ const Customers = () => {
           </div>
         </form>
       </Modal>
+
+      <CustomerHistoryModal 
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        customerId={selectedCustomerId}
+      />
     </div>
   );
 };

@@ -10,7 +10,7 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet)
+router.register(r'', UserViewSet)
 router.register(r'logout', UserLogoutView, basename='logout')
 
 urlpatterns = [

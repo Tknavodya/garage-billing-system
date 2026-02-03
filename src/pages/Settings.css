@@ -6,6 +6,7 @@
     display: grid;
     gap: 1.5rem;
     grid-template-columns: 1fr;
+    max-width: 1000px;
 }
 
 @media (min-width: 1024px) {
@@ -24,31 +25,44 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    width: 100%;
 }
 
-.notifications-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+/* New class to restrict field width on larger screens */
+@media (min-width: 768px) {
+    .form-group.half-width {
+        max-width: 70%;
+    }
 }
 
-.notification-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.primary-blue-btn {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.primary-blue-btn:hover {
+    background-color: #1d4ed8;
+    color: white;
 }
 
 .settings-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start; /* Align with content */
     margin-top: 1.5rem;
+    max-width: 1000px; /* Match grid width */
 }
 
 .w-full {
     width: 100%;
 }
 
-/* Typography utilities reused here to ensure scope */
+.mt-4 {
+    margin-top: 1rem;
+}
+
+/* Typography */
 .font-medium {
     font-weight: 500;
 }

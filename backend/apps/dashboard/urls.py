@@ -1,9 +1,6 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-router = DefaultRouter()
-# router.register(r'items', ItemViewSet)
+from django.urls import path
+from .views import DashboardView
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', DashboardView.as_view(), name='dashboard-stats'),
 ]

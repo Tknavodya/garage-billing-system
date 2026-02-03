@@ -2,7 +2,7 @@ import React from 'react';
 import { Eye } from 'lucide-react';
 import './RecentInvoices.css';
 
-const RecentInvoices = ({ invoices }) => {
+const RecentInvoices = ({ invoices, onView }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Paid': return 'status-paid';
@@ -33,22 +33,22 @@ const RecentInvoices = ({ invoices }) => {
           <tbody>
             {invoices.map((invoice) => (
               <tr key={invoice.id}>
-                <td>{invoice.id}</td>
+                <td>{invoice.invoice_number}</td>
                 <td>
                   <div className="customer-cell">
-                    <span className="customer-name">{invoice.customerName}</span>
-                    <span className="customer-vehicle">{invoice.vehicle}</span>
+                    <span className="customer-name">{invoice.customer_name}</span>
+                    <span className="customer-vehicle">{invoice.vehicle_display}</span>
                   </div>
                 </td>
                 <td>{invoice.date}</td>
-                <td>${invoice.amount.toFixed(2)}</td>
+                <td>${parseFloat(invoice.amount).toFixed(2)}</td>
                 <td>
                   <span className={`status-badge ${getStatusColor(invoice.status)}`}>
                     {invoice.status}
                   </span>
                 </td>
                 <td>
-                  <button className="action-btn">
+                  <button className="action-btn" onClick={() => onView(invoice.id)}>
                     <Eye size={16} />
                   </button>
                 </td>

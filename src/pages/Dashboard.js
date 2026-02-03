@@ -1,57 +1,88 @@
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { DollarSign, FileClock, Car, AlertCircle } from 'lucide-react';
+import { api } from '../utils/api';
 import StatsCard from '../components/dashboard/StatsCard';
 import RecentInvoices from '../components/dashboard/RecentInvoices';
 import './Dashboard.css';
 
+import InvoiceDetailsModal from '../components/invoices/InvoiceDetailsModal';
+
 const Dashboard = () => {
-  // Mock Data
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+      revenue_today: 0,
+      pending_count: 0,
+      overdue_count: 0,
+      vehicles_serviced: 0,
+      outstanding_amount: 0,
+      recent_invoices: []
+  });
+  
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  useEffect(() => {
+      const fetchDashboardData = async () => {
+          try {
+              const data = await api.get('/dashboard/');
+              setData(data);
+          } catch (error) {
+              console.error("Failed to fetch dashboard data", error);
+          } finally {
+              setLoading(false);
+          }
+      };
+
+      fetchDashboardData();
+  }, []);
+
+  const handleViewInvoice = (id) => {
+      setSelectedInvoiceId(id);
+      setIsDetailsOpen(true);
+  };
+
+  const closeDetails = () => {
+      setIsDetailsOpen(false);
+      setSelectedInvoiceId(null);
+  };
+
   const stats = [
     {
       title: "Today's Revenue",
-      value: "$1,250",
+      value: `$${data.revenue_today.toLocaleString()}`,
       icon: DollarSign,
       color: "green",
-      trend: 12,
-      subtext: "vs yesterday"
+      subtext: "vs yesterday" // You could implement trend logic if needed
     },
     {
       title: "Pending Invoices",
-      value: "5",
+      value: data.pending_count,
       icon: FileClock,
       color: "orange",
-      subtext: "2 overdue"
+      subtext: `${data.overdue_count} overdue`
     },
     {
       title: "Vehicles Serviced",
-      value: "18",
+      value: data.vehicles_serviced,
       icon: Car,
       color: "blue",
-      trend: 8,
       subtext: "this week"
     },
     {
       title: "Outstanding Amount",
-      value: "$850",
+      value: `$${data.outstanding_amount.toLocaleString()}`,
       icon: AlertCircle,
       color: "purple",
       subtext: "total unpaid"
     }
   ];
 
-  const recentInvoices = [
-    { id: 'INV-001', customerName: 'John Doe', vehicle: 'Toyota Camry (XYZ-123)', date: '2025-10-24', amount: 350.00, status: 'Paid' },
-    { id: 'INV-002', customerName: 'Alice Smith', vehicle: 'Honda Civic (ABC-987)', date: '2025-10-25', amount: 120.50, status: 'Pending' },
-    { id: 'INV-003', customerName: 'Robert Brown', vehicle: 'Ford F-150 (TRK-555)', date: '2025-10-25', amount: 550.00, status: 'Pending' },
-    { id: 'INV-004', customerName: 'Sarah Wilson', vehicle: 'BMW 320i (LUX-001)', date: '2025-10-23', amount: 890.00, status: 'Overdue' },
-    { id: 'INV-005', customerName: 'Mike Johnson', vehicle: 'Mazda 3 (ZOOM-22)', date: '2025-10-26', amount: 45.00, status: 'Paid' },
-  ];
+  if (loading) return <div className="p-8">Loading dashboard...</div>;
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h1>Dashboard</h1>
-        <Link to="/invoices/new" className="primary-btn" style={{ textDecoration: 'none' }}>New Invoice</Link>
       </div>
       
       <div className="stats-grid">
@@ -60,7 +91,16 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <RecentInvoices invoices={recentInvoices} />
+      <RecentInvoices 
+        invoices={data.recent_invoices} 
+        onView={handleViewInvoice}
+      />
+
+      <InvoiceDetailsModal 
+        isOpen={isDetailsOpen}
+        onClose={closeDetails}
+        invoiceId={selectedInvoiceId}
+      />
     </div>
   );
 };

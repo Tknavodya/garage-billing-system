@@ -1,0 +1,237 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.invoice-modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 600px;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.invoice-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.invoice-modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #0f172a;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.close-btn:hover {
+    color: #0f172a;
+}
+
+.invoice-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.invoice-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Center align items vertically */
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.invoice-info-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem; /* Larger font for Invoice Number */
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.invoice-date {
+    color: #64748b;
+    font-size: 0.95rem;
+    text-align: right;
+}
+
+.customer-vehicle-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Equal columns based on mockup */
+    gap: 2rem;
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 2rem;
+}
+
+.info-block label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.info-block p {
+    margin: 0;
+    font-size: 1.1rem; /* Highly readable */
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.items-section {
+    margin-bottom: 2rem;
+}
+
+.items-section h4 {
+    font-size: 1rem;
+    color: #1e293b;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0; /* Stronger separator */
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: separate; /* Allows border-radius on rows if needed */
+    border-spacing: 0;
+}
+
+.items-table th {
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+    padding: 0.75rem 1rem; /* More padding */
+    font-size: 0.85rem;
+    background: #f8fafc; /* Subtle header background */
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.items-table td {
+    padding: 1rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.95rem;
+}
+
+.items-table tr:last-child td {
+    border-bottom: none;
+}
+
+.items-table th.text-right, 
+.items-table td.text-right {
+    text-align: right;
+}
+
+.part-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.part-num {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.invoice-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    background-color: #fcfcfc; /* Highlight footer area */
+    margin: 0 -1.5rem -1.5rem -1.5rem; /* Stretch full width */
+    padding: 1.5rem;
+    border-radius: 0 0 8px 8px;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.total-amount {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.total-amount label {
+    font-size: 1rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.invoice-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.secondary-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 0.6rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+.status-paid { background: #dcfce7; color: #166534; }
+.status-pending { background: #ffedd5; color: #9a3412; }
+.status-overdue { background: #fee2e2; color: #991b1b; }

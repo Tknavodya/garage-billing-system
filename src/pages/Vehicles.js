@@ -1,57 +1,108 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Car } from 'lucide-react';
-import { useData } from '../context/DataContext';
 import Modal from '../components/common/Modal';
-import './Customers.css'; // Reusing Customers CSS for table styles
+import VehicleHistoryModal from '../components/vehicles/VehicleHistoryModal';
+import './Customers.css';
+
+import { api } from '../utils/api';
 
 const Vehicles = () => {
-  const { vehicles, customers, addVehicle } = useData();
+  const [vehicles, setVehicles] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newVehicle, setNewVehicle] = useState({ 
-    customerId: '', make: '', model: '', year: '', plate: '' 
+    customer: '', make: '', model: '', year: '', plate_number: '' 
   });
+  
+  // History Modal State
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  const getCustomerName = (id) => {
-    const cust = customers.find(c => c.id === parseInt(id));
-    return cust ? cust.name : 'Unknown';
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Fetch Vehicles
+      const endpoint = searchTerm 
+        ? `/vehicles/?search=${encodeURIComponent(searchTerm)}` 
+        : '/vehicles/';
+      const data = await api.get(endpoint);
+      setVehicles(data);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to fetch vehicles');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
+
+  const fetchCustomers = useCallback(async () => {
+      try {
+          const data = await api.get('/customers/');
+          setCustomers(data);
+      } catch(err) {
+          console.error("Error fetching customers for dropdown", err);
+      }
+  }, []);
+
+  useEffect(() => {
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchData]);
+
+  useEffect(() => {
+      fetchCustomers();
+  }, [fetchCustomers]);
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/vehicles/', newVehicle);
+      setNewVehicle({ customer: '', make: '', model: '', year: '', plate_number: '' });
+      setIsModalOpen(false);
+      fetchData(); // Refresh list
+    } catch (err) {
+        alert('Failed to add vehicle: ' + err.message);
+    }
   };
 
-  const filteredVehicles = vehicles.filter(v => 
-    v.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getCustomerName(v.customerId).toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    addVehicle({
-      ...newVehicle,
-      customerId: parseInt(newVehicle.customerId)
-    });
-    setNewVehicle({ customerId: '', make: '', model: '', year: '', plate: '' });
-    setIsModalOpen(false);
+  const handleViewHistory = (vehicleId) => {
+      setSelectedVehicleId(vehicleId);
+      setIsHistoryModalOpen(true);
   };
 
   return (
-    <div className="customers-page">
+    <div className="customers-page animate-fade-in">
       <div className="page-header">
         <h1>Vehicles</h1>
+      </div>
+
+      <div className="actions-bar">
+        <div className="search-bar">
+          <Search size={20} className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search items..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
           <Plus size={18} />
           Add Vehicle
         </button>
       </div>
 
-      <div className="search-bar">
-        <Search size={20} className="search-icon" />
-        <input 
-          type="text" 
-          placeholder="Search items..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      {loading && <div className="loading">Loading...</div>}
+      {error && <div className="error">{error}</div>}
 
       <div className="customers-table">
         <table>
@@ -64,7 +115,7 @@ const Vehicles = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredVehicles.map(vehicle => (
+            {vehicles.map(vehicle => (
               <tr key={vehicle.id}>
                 <td>
                   <div className="user-info">
@@ -74,13 +125,29 @@ const Vehicles = () => {
                     <span>{vehicle.year} {vehicle.make} {vehicle.model}</span>
                   </div>
                 </td>
-                <td><span className="badge">{vehicle.plate}</span></td>
-                <td>{getCustomerName(vehicle.customerId)}</td>
+                <td><span className="badge">{vehicle.plate_number}</span></td>
                 <td>
-                  <button className="text-btn">History</button>
+                    <div className="contact-info">
+                        <span>{vehicle.customer_name}</span>
+                    </div>
+                </td>
+                <td>
+                  <button 
+                    className="text-btn" 
+                    onClick={() => handleViewHistory(vehicle.id)}
+                  >
+                    History
+                  </button>
                 </td>
               </tr>
             ))}
+             {!loading && vehicles.length === 0 && (
+              <tr>
+                <td colSpan="4" style={{textAlign: 'center', padding: '20px'}}>
+                  No vehicles found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -91,8 +158,8 @@ const Vehicles = () => {
             <label>Customer</label>
             <select 
               required 
-              value={newVehicle.customerId}
-              onChange={e => setNewVehicle({...newVehicle, customerId: e.target.value})}
+              value={newVehicle.customer}
+              onChange={e => setNewVehicle({...newVehicle, customer: e.target.value})}
               style={{ padding: '0.75rem', width: '100%', borderRadius: '4px', border: '1px solid #cbd5e1' }}
             >
               <option value="">Select Customer</option>
@@ -107,6 +174,7 @@ const Vehicles = () => {
               required 
               value={newVehicle.make}
               onChange={e => setNewVehicle({...newVehicle, make: e.target.value})}
+              placeholder="e.g. Toyota, Honda, Ford"
             />
           </div>
           <div className="form-group">
@@ -115,6 +183,7 @@ const Vehicles = () => {
               required 
               value={newVehicle.model}
               onChange={e => setNewVehicle({...newVehicle, model: e.target.value})}
+              placeholder="e.g. Camry, Civic, F-150"
             />
           </div>
           <div className="form-group">
@@ -124,14 +193,16 @@ const Vehicles = () => {
               required 
               value={newVehicle.year}
               onChange={e => setNewVehicle({...newVehicle, year: e.target.value})}
+              placeholder="e.g. 2023"
             />
           </div>
           <div className="form-group">
             <label>Plate Number</label>
             <input 
               required 
-              value={newVehicle.plate}
-              onChange={e => setNewVehicle({...newVehicle, plate: e.target.value})}
+              value={newVehicle.plate_number}
+              onChange={e => setNewVehicle({...newVehicle, plate_number: e.target.value})}
+              placeholder="e.g. ABC-1234"
             />
           </div>
           <div className="modal-actions">
@@ -140,6 +211,12 @@ const Vehicles = () => {
           </div>
         </form>
       </Modal>
+
+      <VehicleHistoryModal 
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        vehicleId={selectedVehicleId}
+      />
     </div>
   );
 };

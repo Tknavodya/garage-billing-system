@@ -15,15 +15,47 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    // Mock authentication
-    if (email === 'admin@garage.com' && password === 'admin123') {
-      const userData = { email, name: 'Admin User', role: 'admin' };
-      setUser(userData);
-      localStorage.setItem('garage_user', JSON.stringify(userData));
-      return true;
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/users/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        localStorage.setItem('garage_user', JSON.stringify(data.user));
+        localStorage.setItem('garage_token', data.access);
+        return { success: true };
+      }
+      
+      const errorData = await response.json();
+      // Django DRF validation errors usually come as an array or string
+      // e.g. ["Invalid password"] or { "non_field_errors": ["..."] }
+      let errorMessage = 'Login failed';
+      
+      if (typeof errorData === 'object') {
+        if (Array.isArray(errorData)) {
+            errorMessage = errorData[0];
+        } else {
+             // Handle { "non_field_errors": [...] } or { "detail": "..." }
+             const keys = Object.keys(errorData);
+             if (keys.length > 0) {
+                 const firstError = errorData[keys[0]];
+                 errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+             }
+        }
+      }
+      
+      return { success: false, error: errorMessage };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
     }
-    return false;
   };
 
   const logout = () => {

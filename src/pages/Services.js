@@ -1,188 +1,267 @@
-import React, { useState } from 'react';
-import { Plus, Clock, DollarSign } from 'lucide-react';
-import { PageHeader } from '../components/shared/PageHeader';
-import { SearchInput } from '../components/shared/SearchInput';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Input, Label, Textarea } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { services } from '../data/mockData';
-import { useToast } from '../hooks/use-toast';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Plus, Clock, Wrench } from 'lucide-react';
+import Modal from '../components/common/Modal';
+import { api } from '../utils/api';
+import './Customers.css';
 import './Services.css';
 
-const categories = ['Maintenance', 'Brakes', 'Tires', 'Engine', 'Climate', 'Transmission', 'Electrical'];
-
 const Services = () => {
-  const { toast } = useToast();
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newService, setNewService] = useState({
-    name: '',
-    description: '',
-    category: '',
-    price: '',
-    duration: '',
+  const [services, setServices] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Form State
+  const [newService, setNewService] = useState({ 
+    name: '', 
+    description: '', 
+    price: '', 
+    duration: '', 
+    category: 'Maintenance' 
   });
 
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      service.name.toLowerCase().includes(search.toLowerCase()) ||
-      service.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+  const categories = ['Maintenance', 'Brakes', 'Tires', 'Engine', 'Climate', 'Electrical', 'Other'];
+
+  const [editingId, setEditingId] = useState(null);
+
+  const fetchServices = useCallback(async () => {
+    setLoading(true);
+    try {
+      let url = '/services/';
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      
+      url += `?${params.toString()}`;
+
+      const data = await api.get(url);
+      setServices(data);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching services:', err);
+      setError('Failed to fetch services');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchServices(), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchServices]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await api.put(`/services/${editingId}/`, newService);
+      } else {
+        await api.post('/services/', newService);
+      }
+
+      setIsModalOpen(false);
+      setNewService({ 
+          name: '', description: '', price: '', 
+          duration: '', category: 'Maintenance' 
+      });
+      setEditingId(null);
+      fetchServices();
+    } catch (err) {
+        alert('Failed to save service: ' + err.message);
+    }
+  };
+
+  const handleEdit = (service) => {
+      setNewService({
+          name: service.name,
+          description: service.description,
+          price: service.price,
+          duration: service.duration,
+          category: service.category
+      });
+      setEditingId(service.id);
+      setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+      if (!window.confirm('Are you sure you want to delete this service?')) return;
+      
+      try {
+          await api.delete(`/services/${id}/`);
+          fetchServices();
+      } catch (err) {
+          alert('Failed to delete service');
+      }
+  };
+
+  const filteredServices = services.filter(service => {
+      if (filterCategory === 'All') return true;
+      return service.category === filterCategory;
   });
 
-  const handleAddService = () => {
-    toast({
-      title: 'Service Added',
-      description: `${newService.name} has been added to the catalog.`,
+  // Helper to format duration
+  const formatDuration = (mins) => {
+      if (mins >= 60) {
+          const hrs = Math.floor(mins / 60);
+          const remainingMins = mins % 60;
+          return remainingMins > 0 ? `${hrs} hr ${remainingMins} min` : `${hrs} hr`;
+      }
+      return `${mins} min`;
+  };
+
+  const openNewModal = () => {
+      setEditingId(null);
+      setNewService({ 
+        name: '', description: '', price: '', 
+        duration: '', category: 'Maintenance' 
     });
-    setIsDialogOpen(false);
-    setNewService({ name: '', description: '', category: '', price: '', duration: '' });
+    setIsModalOpen(true);
   };
 
   return (
-    <div className="services-page fade-in">
-      <PageHeader
-        title="Services"
-        description="Manage your service catalog"
-        action={{
-          label: 'Add Service',
-          onClick: () => setIsDialogOpen(true),
-          icon: Plus,
-        }}
-      />
-
-      <div className="filters-container">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search services..."
-        />
-        <div style={{ width: '200px' }}>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="customers-page">
+      <div className="page-header" style={{ marginBottom: '0.5rem' }}>
+        <div>
+            <h1>Services</h1>
+            <p style={{ color: '#64748b', marginTop: '0.5rem' }}>Manage your service catalog</p>
         </div>
+        <button className="primary-btn" onClick={openNewModal}>
+          <Plus size={18} />
+          Add Service
+        </button>
       </div>
+
+      <div className="actions-bar">
+        <div className="search-bar" style={{width: '300px'}}>
+          <Search size={20} className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search services..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <select 
+            className="category-filter"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+        >
+            <option value="All">All Categories</option>
+            {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+            ))}
+        </select>
+      </div>
+
+      {loading && <div className="loading">Loading...</div>}
+      {error && <div className="error">{error}</div>}
 
       <div className="services-grid">
-        {filteredServices.map((service) => (
-          <Card key={service.id} className="service-card">
-            <CardContent>
-              <div className="card-header-row">
-                <Badge variant="secondary">{service.category}</Badge>
+          {filteredServices.map(service => (
+              <div key={service.id} className="service-card">
+                  <div className="service-header">
+                      <span className={`category-badge badge-${service.category.toLowerCase()}`}>
+                          {service.category}
+                      </span>
+                      <div className="card-actions">
+                          <button onClick={() => handleEdit(service)} className="icon-btn edit-btn" title="Edit">
+                            <span style={{fontSize: '18px'}}>✎</span>
+                          </button>
+                          <button onClick={() => handleDelete(service.id)} className="icon-btn delete-btn" title="Delete">
+                            <span style={{fontSize: '18px', color: '#ef4444'}}>×</span>
+                          </button>
+                      </div>
+                  </div>
+                  <h3>{service.name}</h3>
+                  <p className="service-description">{service.description}</p>
+                  <div className="service-footer">
+                      <div className="duration">
+                          <Clock size={16} />
+                          <span>{formatDuration(service.duration)}</span>
+                      </div>
+                      <div className="price">
+                          ${service.price}
+                      </div>
+                  </div>
               </div>
-              <h3 className="service-name">{service.name}</h3>
-              <p className="service-desc">{service.description}</p>
-              <div className="service-footer">
-                <div className="service-meta">
-                  <Clock size={16} />
-                  {service.duration}
-                </div>
-                <div className="service-price">
-                  <DollarSign size={16} />
-                  {service.price.toFixed(2)}
-                </div>
+          ))}
+          {!loading && filteredServices.length === 0 && (
+              <div className="no-results">
+                  No services found matching your criteria.
               </div>
-            </CardContent>
-          </Card>
-        ))}
+          )}
       </div>
 
-      {filteredServices.length === 0 && (
-        <div className="empty-state">
-          No services found
-        </div>
-      )}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Edit Service" : "Add New Service"}>
+        <form onSubmit={handleSubmit} className="customer-form">
+            <div className="form-group">
+                <label>Service Name</label>
+                <input 
+                    required 
+                    value={newService.name}
+                    onChange={e => setNewService({...newService, name: e.target.value})}
+                    placeholder="e.g. Oil Change"
+                    className="form-control"
+                />
+            </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="dialog-content">
-          <DialogHeader>
-            <DialogTitle>Add New Service</DialogTitle>
-          </DialogHeader>
-          <div className="form-stack">
-            <div className="form-item">
-              <Label htmlFor="name">Service Name</Label>
-              <Input
-                id="name"
-                placeholder="Oil Change"
-                value={newService.name}
-                onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-              />
-            </div>
-            <div className="form-item">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe the service..."
-                value={newService.description}
-                onChange={(e) => setNewService({ ...newService, description: e.target.value })}
-              />
-            </div>
-            <div className="form-item">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={newService.category}
-                onValueChange={(value) => setNewService({ ...newService, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-grid-2">
-              <div className="form-item">
-                <Label htmlFor="price">Price ($)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="75.00"
-                  value={newService.price}
-                  onChange={(e) => setNewService({ ...newService, price: e.target.value })}
+            <div className="form-group">
+                <label>Description</label>
+                <textarea 
+                    value={newService.description}
+                    onChange={e => setNewService({...newService, description: e.target.value})}
+                    placeholder="Brief description of the service..."
+                    className="form-control"
+                    rows="3"
                 />
-              </div>
-              <div className="form-item">
-                <Label htmlFor="duration">Duration</Label>
-                <Input
-                  id="duration"
-                  placeholder="30 min"
-                  value={newService.duration}
-                  onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
+            </div>
+
+            <div className="form-row">
+                <div className="form-group" style={{flex: 1}}>
+                    <label>Category</label>
+                    <select 
+                        value={newService.category}
+                        onChange={e => setNewService({...newService, category: e.target.value})}
+                        className="form-control"
+                    >
+                        {categories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group" style={{flex: 1}}>
+                    <label>Price ($)</label>
+                    <input 
+                        type="number" step="0.01"
+                        required 
+                        value={newService.price}
+                        onChange={e => setNewService({...newService, price: e.target.value})}
+                        placeholder="0.00"
+                        className="form-control"
+                    />
+                </div>
+            </div>
+
+            <div className="form-group">
+                <label>Duration (Minutes)</label>
+                <input 
+                    type="number"
+                    required 
+                    value={newService.duration}
+                    onChange={e => setNewService({...newService, duration: e.target.value})}
+                    placeholder="e.g. 30"
+                    className="form-control"
                 />
-              </div>
             </div>
-            <div className="dialog-actions">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)} style={{ flex: 1 }}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddService} style={{ flex: 1 }}>
-                Add Service
-              </Button>
+
+            <div className="modal-actions">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="secondary-btn">Cancel</button>
+                <button type="submit" className="primary-btn">{editingId ? 'Update Service' : 'Add Service'}</button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </form>
+      </Modal>
     </div>
   );
 };

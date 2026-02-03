@@ -1,3 +1,9 @@
 from rest_framework import serializers
 
-# Create your serializers here.
+from .models import Part
+
+class PartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Part
+        fields = '__all__'
+        read_only_fields = ['created_at']

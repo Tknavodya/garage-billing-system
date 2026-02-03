@@ -9,9 +9,7 @@ import Customers from './pages/Customers';
 import Vehicles from './pages/Vehicles';
 import Inventory from './pages/Inventory';
 import Services from './pages/Services';
-import InvoicesList from './pages/Invoices/InvoicesList';
-import CreateInvoice from './pages/Invoices/CreateInvoice';
-import InvoiceDetail from './pages/Invoices/InvoiceDetail';
+import Invoices from './pages/Invoices';
 import Settings from './pages/Settings';
 import './App.css';
 
@@ -42,9 +40,7 @@ const App = () => {
               <Route index element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
               <Route path="vehicles" element={<Vehicles />} />
-              <Route path="invoices" element={<InvoicesList />} />
-              <Route path="invoices/new" element={<CreateInvoice />} />
-              <Route path="invoices/:id" element={<InvoiceDetail />} />
+              <Route path="invoices" element={<Invoices />} />
               <Route path="services" element={<Services />} />
               <Route path="inventory" element={<Inventory />} />
               <Route path="settings" element={<Settings />} />

@@ -10,13 +10,13 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       navigate('/');
     } else {
-      setError('Invalid credentials. Try admin@garage.com / admin123');
+      setError(result.error);
     }
   };
 
@@ -55,7 +55,7 @@ const Login = () => {
         </form>
         
         <div className="login-footer">
-          <p>Demo Credentials: admin@garage.com / admin123</p>
+          <p>Login to your account</p>
         </div>
       </div>
     </div>

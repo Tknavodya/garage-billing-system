@@ -53,7 +53,14 @@ class UserLoginSerializer(serializers.Serializer):
         password = attrs.get('password')
         
         if email and password:
-            # Use authenticate to prevent timing attacks
+            # Check if user exists first to provide specific error
+            from .models import User
+            try:
+                user_obj = User.objects.get(email=email)
+            except User.DoesNotExist:
+                raise serializers.ValidationError('We cannot find an account with that email address.')
+            
+            # Use authenticate to verify password
             from django.contrib.auth import authenticate
             user = authenticate(email=email, password=password)
             
@@ -64,7 +71,7 @@ class UserLoginSerializer(serializers.Serializer):
                 else:
                     raise serializers.ValidationError('User account is disabled.')
             else:
-                raise serializers.ValidationError('Invalid email or password.')
+                raise serializers.ValidationError('The password you entered is incorrect.')
         else:
             raise serializers.ValidationError('Must include email and password.')
 

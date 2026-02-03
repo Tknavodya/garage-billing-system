@@ -1,252 +1,314 @@
-import React, { useState } from 'react';
-import { Plus, AlertTriangle } from 'lucide-react';
-import { PageHeader } from '../components/shared/PageHeader';
-import { SearchInput } from '../components/shared/SearchInput';
-import { DataTable } from '../components/shared/DataTable';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Input, Label } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { spareParts } from '../data/mockData';
-import { useToast } from '../hooks/use-toast';
-import { cn } from '../lib/utils';
-import './Inventory.css';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Plus, AlertTriangle, Edit, Trash } from 'lucide-react';
+import Modal from '../components/common/Modal';
+import { api } from '../utils/api';
+import './Customers.css';
 
-const categories = ['Filters', 'Brakes', 'Engine', 'Exterior', 'Fluids', 'Electrical'];
+const Inventory = () => {
+  const [parts, setParts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
-const SpareParts = () => {
-  const { toast } = useToast();
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newPart, setNewPart] = useState({
-    name: '',
-    partNumber: '',
-    category: '',
-    price: '',
-    stock: '',
-    minStock: '',
+  // Form State
+  const [newPart, setNewPart] = useState({ 
+    name: '', 
+    part_number: '', 
+    category: 'Other', 
+    price: '', 
+    stock: '', 
+    min_stock: '' 
   });
 
-  const filteredParts = spareParts.filter((part) => {
-    const matchesSearch =
-      part.name.toLowerCase().includes(search.toLowerCase()) ||
-      part.partNumber.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || part.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const categories = ['Filters', 'Brakes', 'Engine', 'Exterior', 'Fluids', 'Electrical', 'Other'];
 
-  const columns = [
-    {
-      key: 'name',
-      header: 'Part Name',
-      render: (part) => (
-        <div>
-          <p className="font-medium">{part.name}</p>
-          <p className="font-mono text-xs text-muted-foreground">{part.partNumber}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'category',
-      header: 'Category',
-      render: (part) => <Badge variant="secondary">{part.category}</Badge>,
-    },
-    {
-      key: 'price',
-      header: 'Price',
-      render: (part) => (
-        <span className="font-medium">${part.price.toFixed(2)}</span>
-      ),
-    },
-    {
-      key: 'stock',
-      header: 'Stock',
-      render: (part) => {
-        const isLow = part.stock < part.minStock;
-        return (
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                'font-medium',
-                isLow && 'text-destructive'
-              )}
-            >
-              {part.stock}
-            </span>
-            {isLow && (
-              <span className="flex items-center gap-1 text-xs text-destructive">
-                <AlertTriangle className="h-3 w-3" />
-                Low stock
-              </span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      key: 'minStock',
-      header: 'Min Stock',
-      render: (part) => (
-        <span className="text-muted-foreground">{part.minStock}</span>
-      ),
-    },
-  ];
+  const fetchParts = useCallback(async () => {
+    setLoading(true);
+    try {
+      let url = '/parts/';
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      
+      url += `?${params.toString()}`;
 
-  const handleAddPart = () => {
-    toast({
-      title: 'Part Added',
-      description: `${newPart.name} has been added to inventory.`,
-    });
-    setIsDialogOpen(false);
-    setNewPart({ name: '', partNumber: '', category: '', price: '', stock: '', minStock: '' });
+      const data = await api.get(url);
+      setParts(data);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching parts:', err);
+      setError('Failed to fetch parts');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchParts(), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchParts]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await api.put(`/parts/${editingId}/`, newPart);
+      } else {
+        await api.post('/parts/', newPart);
+      }
+
+      setIsModalOpen(false);
+      setNewPart({ 
+            name: '', part_number: '', category: 'Other', 
+            price: '', stock: '', min_stock: '' 
+      });
+      setEditingId(null);
+      fetchParts();
+    } catch (err) {
+        alert('Failed to save part: ' + err.message);
+    }
   };
 
-  const lowStockCount = spareParts.filter((p) => p.stock < p.minStock).length;
+  const handleEdit = (part) => {
+      setNewPart({
+          name: part.name,
+          part_number: part.part_number,
+          category: part.category,
+          price: part.price,
+          stock: part.stock,
+          min_stock: part.min_stock
+      });
+      setEditingId(part.id);
+      setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+      if (!window.confirm('Are you sure you want to delete this part?')) return;
+      
+      try {
+          await api.delete(`/parts/${id}/`);
+          fetchParts();
+      } catch (err) {
+          alert('Failed to delete part');
+      }
+  };
+
+  const openNewModal = () => {
+    setEditingId(null);
+    setNewPart({ 
+         name: '', part_number: '', category: 'Other', 
+         price: '', stock: '', min_stock: '' 
+    });
+    setIsModalOpen(true);
+  };
+
+  const filteredParts = parts.filter(part => {
+    if (categoryFilter === 'All') return true;
+    return part.category === categoryFilter;
+  });
+
+  const lowStockCount = parts.filter(p => p.stock < p.min_stock).length;
 
   return (
-    <div className="space-y-6 animate-fade-in inventory-page">
-      <PageHeader
-        title="Spare Parts"
-        description="Manage your parts inventory"
-        action={{
-          label: 'Add Part',
-          onClick: () => setIsDialogOpen(true),
-          icon: Plus,
-        }}
-      />
+    <div className="customers-page">
+      <div className="page-header" style={{ marginBottom: '0.5rem' }}>
+        <div>
+            <h1>Inventory</h1>
+            <p style={{ color: '#64748b', marginTop: '0.5rem' }}>Manage your spare parts and stock levels</p>
+        </div>
+        <button className="primary-btn" onClick={openNewModal}>
+          <Plus size={18} />
+          Add Part
+        </button>
+      </div>
 
-      {lowStockCount > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-warning-50 bg-warning-10 p-4 mb-4">
-          <AlertTriangle className="h-5 w-5 text-warning" />
-          <p className="text-sm">
-            <strong>{lowStockCount} items</strong> are running low on stock and need to be reordered.
-          </p>
+       {lowStockCount > 0 && (
+        <div style={{
+            background: '#fff7ed', border: '1px solid #ffedd5', color: '#9a3412',
+            padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem',
+            display: 'flex', alignItems: 'center', gap: '0.75rem'
+        }}>
+          <AlertTriangle size={20} />
+          <span>
+            <strong>{lowStockCount} items</strong> are running low on stock.
+          </span>
         </div>
       )}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <div className="flex flex-1" style={{ gap: '7rem' }}>
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search parts..."
+      <div className="actions-bar">
+        <div className="search-bar" style={{width: '300px'}}>
+          <Search size={20} className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search parts (name, number)..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <div style={{ width: '200px' }}>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {filteredParts.length} parts found
-        </p>
+        
+        <select 
+            className="category-filter"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            style={{ 
+                padding: '0.5rem 1rem', border: '1px solid #cbd5e1', 
+                borderRadius: '6px', outline: 'none'
+            }}
+        >
+            <option value="All">All Categories</option>
+            {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+            ))}
+        </select>
       </div>
 
-      <DataTable
-        data={filteredParts}
-        columns={columns}
-        emptyMessage="No parts found"
-      />
+      {loading && <div className="loading">Loading...</div>}
+      {error && <div className="error">{error}</div>}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Part</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Part Name</Label>
-              <Input
-                id="name"
-                placeholder="Oil Filter"
-                value={newPart.name}
-                onChange={(e) => setNewPart({ ...newPart, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="partNumber">Part Number</Label>
-              <Input
-                id="partNumber"
-                placeholder="OF-2024-A"
-                value={newPart.partNumber}
-                onChange={(e) => setNewPart({ ...newPart, partNumber: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={newPart.category}
-                onValueChange={(value) => setNewPart({ ...newPart, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="form-grid-3">
-              <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="15.00"
-                  value={newPart.price}
-                  onChange={(e) => setNewPart({ ...newPart, price: e.target.value })}
+      <div className="customers-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Part Name</th>
+              <th>Part Number</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredParts.map(part => (
+              <tr key={part.id}>
+                <td style={{fontWeight: 500, color: '#0f172a'}}>{part.name}</td>
+                <td style={{fontFamily: 'monospace', color: '#64748b'}}>{part.part_number}</td>
+                <td>
+                    <span className="badge" style={{background: '#f1f5f9', color: '#475569'}}>
+                        {part.category}
+                    </span>
+                </td>
+                <td>${part.price}</td>
+                <td style={{fontWeight: 600}}>
+                    {part.stock}
+                </td>
+                <td>
+                    {part.stock < part.min_stock ? (
+                        <span className="badge" style={{background: '#fee2e2', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '4px', width: 'fit-content'}}>
+                            <AlertTriangle size={12} /> Low Stock
+                        </span>
+                    ) : (
+                        <span className="badge" style={{background: '#dcfce7', color: '#166534'}}>In Stock</span>
+                    )}
+                </td>
+                <td>
+                  <div className="card-actions">
+                      <button onClick={() => handleEdit(part)} className="icon-btn edit-btn" title="Edit">
+                        <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(part.id)} className="icon-btn delete-btn" title="Delete">
+                        <Trash size={16} color="#ef4444" />
+                      </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+             {!loading && filteredParts.length === 0 && (
+              <tr>
+                <td colSpan="7" style={{textAlign: 'center', padding: '20px'}}>
+                  No parts found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Edit Part" : "Add New Part"}>
+        <form onSubmit={handleSubmit} className="customer-form">
+            <div className="form-group">
+                <label>Part Name</label>
+                <input 
+                    required 
+                    value={newPart.name}
+                    onChange={e => setNewPart({...newPart, name: e.target.value})}
+                    placeholder="e.g. Oil Filter"
+                    className="form-control"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="stock">Stock</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  placeholder="50"
-                  value={newPart.stock}
-                  onChange={(e) => setNewPart({ ...newPart, stock: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="minStock">Min Stock</Label>
-                <Input
-                  id="minStock"
-                  type="number"
-                  placeholder="20"
-                  value={newPart.minStock}
-                  onChange={(e) => setNewPart({ ...newPart, minStock: e.target.value })}
-                />
-              </div>
             </div>
-            <div className="flex gap-3 pt-4">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)} style={{ flex: 1 }}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddPart} style={{ flex: 1 }}>
-                Add Part
-              </Button>
+
+            <div className="form-group">
+                <label>Part Number</label>
+                <input 
+                    required 
+                    value={newPart.part_number}
+                    onChange={e => setNewPart({...newPart, part_number: e.target.value})}
+                    placeholder="e.g. OF-2024-X"
+                    className="form-control"
+                />
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
+            <div className="form-row">
+                <div className="form-group" style={{flex: 1}}>
+                    <label>Category</label>
+                    <select 
+                        value={newPart.category}
+                        onChange={e => setNewPart({...newPart, category: e.target.value})}
+                        className="form-control"
+                    >
+                        {categories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group" style={{flex: 1}}>
+                    <label>Price ($)</label>
+                    <input 
+                        type="number" step="0.01"
+                        required 
+                        value={newPart.price}
+                        onChange={e => setNewPart({...newPart, price: e.target.value})}
+                        placeholder="0.00"
+                        className="form-control"
+                    />
+                </div>
+            </div>
+
+            <div className="form-row">
+                <div className="form-group" style={{flex: 1}}>
+                    <label>Current Stock</label>
+                    <input 
+                        type="number"
+                        required 
+                        value={newPart.stock}
+                        onChange={e => setNewPart({...newPart, stock: e.target.value})}
+                        placeholder="0"
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group" style={{flex: 1}}>
+                    <label>Min Stock Alert</label>
+                    <input 
+                        type="number"
+                        required 
+                        value={newPart.min_stock}
+                        onChange={e => setNewPart({...newPart, min_stock: e.target.value})}
+                        placeholder="5"
+                        className="form-control"
+                    />
+                </div>
+            </div>
+
+            <div className="modal-actions">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="secondary-btn">Cancel</button>
+                <button type="submit" className="primary-btn">{editingId ? 'Update Part' : 'Add Part'}</button>
+            </div>
+        </form>
+      </Modal>
     </div>
   );
 };
 
-export default SpareParts;
+export default Inventory;
