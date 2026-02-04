@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Car } from 'lucide-react';
+import { Search, Plus, Car, Edit, Trash } from 'lucide-react';
 import Modal from '../components/common/Modal';
 import VehicleHistoryModal from '../components/vehicles/VehicleHistoryModal';
-import './Customers.css';
+import './Vehicles.css';
 
 import { api } from '../utils/api';
 
@@ -11,6 +11,7 @@ const Vehicles = () => {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [newVehicle, setNewVehicle] = useState({ 
     customer: '', make: '', model: '', year: '', plate_number: '' 
   });
@@ -60,17 +61,51 @@ const Vehicles = () => {
   useEffect(() => {
       fetchCustomers();
   }, [fetchCustomers]);
+  const resetForm = () => {
+    setNewVehicle({ customer: '', make: '', model: '', year: '', plate_number: '' });
+    setEditingId(null);
+  }
 
+  const openNewModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  }
+
+  const handleEdit = (vehicle) => {
+    setNewVehicle({
+      customer: vehicle.customer,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      plate_number: vehicle.plate_number
+    });
+    setEditingId(vehicle.id);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this vehicle?')) return;
+    try {
+      await api.delete(`/vehicles/${id}/`);
+      fetchData();
+    } catch (err) {
+      alert('Failed to delete vehicle: ' + err.message);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/vehicles/', newVehicle);
-      setNewVehicle({ customer: '', make: '', model: '', year: '', plate_number: '' });
+      if (editingId) {
+        await api.put(`/vehicles/${editingId}/`, newVehicle);
+      } else {
+        await api.post('/vehicles/', newVehicle);
+      }
+      resetForm();
       setIsModalOpen(false);
       fetchData(); // Refresh list
     } catch (err) {
-        alert('Failed to add vehicle: ' + err.message);
+        alert('Failed to save vehicle: ' + err.message);
     }
   };
 
@@ -80,7 +115,7 @@ const Vehicles = () => {
   };
 
   return (
-    <div className="customers-page animate-fade-in">
+    <div className="vehicles-page animate-fade-in">
       <div className="page-header">
         <h1>Vehicles</h1>
       </div>
@@ -95,7 +130,7 @@ const Vehicles = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="primary-btn" onClick={openNewModal}>
           <Plus size={18} />
           Add Vehicle
         </button>
@@ -132,12 +167,29 @@ const Vehicles = () => {
                     </div>
                 </td>
                 <td>
-                  <button 
-                    className="text-btn" 
-                    onClick={() => handleViewHistory(vehicle.id)}
-                  >
-                    History
-                  </button>
+                  <div className="actions-cell">
+                    <button 
+                      className="icon-btn edit" 
+                      onClick={() => handleEdit(vehicle)}
+                      title="Edit Vehicle"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button 
+                      className="icon-btn delete" 
+                      onClick={() => handleDelete(vehicle.id)}
+                      title="Delete Vehicle"
+                    >
+                      <Trash size={16} />
+                    </button>
+                    <button 
+                      className="text-btn" 
+                      onClick={() => handleViewHistory(vehicle.id)}
+                      title="View History"
+                    >
+                      History
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -190,7 +242,7 @@ const Vehicles = () => {
             <label>Year</label>
             <input 
               type="number"
-              required 
+              required
               value={newVehicle.year}
               onChange={e => setNewVehicle({...newVehicle, year: e.target.value})}
               placeholder="e.g. 2023"
@@ -207,7 +259,7 @@ const Vehicles = () => {
           </div>
           <div className="modal-actions">
             <button type="button" onClick={() => setIsModalOpen(false)} className="secondary-btn">Cancel</button>
-            <button type="submit" className="primary-btn">Save Vehicle</button>
+            <button type="submit" className="primary-btn">{editingId ? "Update Vehicle" : "Save Vehicle"}</button>
           </div>
         </form>
       </Modal>

@@ -41,7 +41,7 @@ const RecentInvoices = ({ invoices, onView }) => {
                   </div>
                 </td>
                 <td>{invoice.date}</td>
-                <td>${parseFloat(invoice.amount).toFixed(2)}</td>
+                <td>Rs. {parseFloat(invoice.amount).toFixed(2)}</td>
                 <td>
                   <span className={`status-badge ${getStatusColor(invoice.status)}`}>
                     {invoice.status}

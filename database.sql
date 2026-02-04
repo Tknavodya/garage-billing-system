@@ -118,28 +118,28 @@ INSERT INTO vehicles (customer_id, make, model, year, license_plate) VALUES
 
 -- Services
 INSERT INTO services (name, description, category, price, duration) VALUES
-('Standard Oil Change', 'Complete oil change with synthetic blend', 'Maintenance', 49.99, '30 min'),
-('Brake Pad Replacement', 'Front or rear brake pads', 'Brakes', 149.99, '1 hr'),
-('Tire Rotation', 'Rotate all 4 tires', 'Tires', 39.99, '45 min');
+('Standard Oil Change', 'Complete oil change with synthetic blend', 'Maintenance', 4500, '30 min'),
+('Brake Pad Replacement', 'Front or rear brake pads', 'Brakes', 8500, '1 hr'),
+('Tire Rotation', 'Rotate all 4 tires', 'Tires', 2500, '45 min');
 
 -- Parts
 INSERT INTO parts (name, part_number, category, price, stock, min_stock) VALUES
-('Oil Filter', 'OF-2024-A', 'Filters', 12.50, 45, 10),
-('Brake Pads (Front)', 'BP-F-001', 'Brakes', 55.00, 8, 15),
-('Synthetic Oil (5W-30)', 'OIL-SYN', 'Fluids', 35.00, 60, 20);
+('Oil Filter', 'OF-2024-A', 'Filters', 1800, 45, 10),
+('Brake Pads (Front)', 'BP-F-001', 'Brakes', 6500, 8, 15),
+('Synthetic Oil (5W-30)', 'OIL-SYN', 'Fluids', 4800, 60, 20);
 
 -- Settings
 INSERT INTO settings (setting_key, setting_value) VALUES
 ('garage_name', 'AutoGarage Pro'),
 ('tax_rate', '8.0'),
-('currency', 'USD');
+('currency', 'LKR');
 
 -- Invoices (Sample Pending Invoice)
 INSERT INTO invoices (invoice_number, customer_id, vehicle_id, date, subtotal, tax_amount, total_amount, status) 
-VALUES ('INV-001', 1, 1, CURRENT_DATE, 62.49, 5.00, 67.49, 'Pending');
+VALUES ('INV-001', 1, 1, CURRENT_DATE, 6300, 0, 6300, 'Pending');
 
 INSERT INTO invoice_items (invoice_id, service_id, item_name, quantity, unit_price, total_price)
-VALUES (1, 1, 'Standard Oil Change', 1, 49.99, 49.99);
+VALUES (1, 1, 'Standard Oil Change', 1, 4500, 4500);
 
 INSERT INTO invoice_items (invoice_id, part_id, item_name, quantity, unit_price, total_price)
-VALUES (1, 1, 'Oil Filter', 1, 12.50, 12.50);
+VALUES (1, 1, 'Oil Filter', 1, 1800, 1800);

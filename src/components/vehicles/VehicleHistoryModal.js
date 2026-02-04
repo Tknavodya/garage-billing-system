@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
-import { FileText, Calendar, DollarSign, Wrench } from 'lucide-react';
+import { FileText, Calendar, Wrench } from 'lucide-react';
+import { API_BASE_URL } from '../../utils/api';
 import '../common/SharedHistoryModal.css';
 
 const VehicleHistoryModal = ({ vehicleId, isOpen, onClose }) => {
@@ -17,7 +18,7 @@ const VehicleHistoryModal = ({ vehicleId, isOpen, onClose }) => {
         setLoading(true);
         try {
             const token = localStorage.getItem('garage_token');
-            const res = await fetch(`http://localhost:8000/api/vehicles/${vehicleId}/history/`, {
+            const res = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/history/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -88,7 +89,7 @@ const VehicleHistoryModal = ({ vehicleId, isOpen, onClose }) => {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="font-medium">${inv.amount}</td>
+                                            <td className="font-medium">Rs. {inv.amount}</td>
                                             <td>
                                                 <span className={`status-badge ${inv.status.toLowerCase()}`}>
                                                     {inv.status}

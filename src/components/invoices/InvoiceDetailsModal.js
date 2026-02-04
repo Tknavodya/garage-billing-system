@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Printer, Download } from 'lucide-react';
-import Modal from '../common/Modal'; // Taking advantage of existing Modal wrapper if possible or creating standalone
+import Modal from '../common/Modal'; 
+import { api, API_BASE_URL } from '../../utils/api';
 import './InvoiceDetailsModal.css';
 
 // Assuming we want reuse the existing Modal or create a specific one. 
@@ -39,7 +40,7 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
   const handleDownloadPDF = async () => {
       try {
           const token = localStorage.getItem('garage_token');
-          const res = await fetch(`http://localhost:8000/api/invoices/${invoiceId}/download_pdf/`, {
+          const res = await fetch(`${API_BASE_URL}/invoices/${invoiceId}/download_pdf/`, {
               headers: {
                   'Authorization': `Bearer ${token}`
               }
@@ -116,7 +117,7 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
                                     {invoice.services.map(s => (
                                         <tr key={s.id}>
                                             <td>{s.service_name}</td>
-                                            <td className="text-right">${s.price}</td>
+                                            <td className="text-right">Rs. {s.price}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -146,8 +147,8 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
                                                 </div>
                                             </td>
                                             <td>{p.quantity}</td>
-                                            <td className="text-right">${p.price}</td>
-                                            <td className="text-right">${(p.price * p.quantity).toFixed(2)}</td>
+                                            <td className="text-right">Rs. {p.price}</td>
+                                            <td className="text-right">Rs. {(p.price * p.quantity).toFixed(2)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -158,7 +159,7 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
                     <div className="invoice-footer">
                         <div className="total-amount">
                             <label>Total Amount:</label>
-                            <span>${invoice.amount}</span>
+                            <span>Rs. {invoice.amount}</span>
                         </div>
                     </div>
 

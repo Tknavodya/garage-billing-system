@@ -132,7 +132,7 @@ const Services = () => {
         </button>
       </div>
 
-      <div className="actions-bar">
+      <div className="actions-bar" style={{ gap: '1rem' }}>
         <div className="search-bar" style={{width: '300px'}}>
           <Search size={20} className="search-icon" />
           <input 
@@ -182,7 +182,7 @@ const Services = () => {
                           <span>{formatDuration(service.duration)}</span>
                       </div>
                       <div className="price">
-                          ${service.price}
+                          Rs. {service.price}
                       </div>
                   </div>
               </div>
@@ -232,7 +232,7 @@ const Services = () => {
                     </select>
                 </div>
                 <div className="form-group" style={{flex: 1}}>
-                    <label>Price ($)</label>
+                    <label>Price (Rs.)</label>
                     <input 
                         type="number" step="0.01"
                         required 

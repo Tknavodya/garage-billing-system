@@ -1,5 +1,5 @@
 
-const API_BASE_URL = 'http://localhost:8000/api';
+export const API_BASE_URL = 'http://localhost:8001/api';
 
 export const getAuthHeaders = () => {
     const token = localStorage.getItem('garage_token');

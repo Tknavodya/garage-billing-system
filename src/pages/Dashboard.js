@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, FileClock, Car, AlertCircle } from 'lucide-react';
+import { Banknote, FileClock, Car, AlertCircle } from 'lucide-react';
 import { api } from '../utils/api';
 import StatsCard from '../components/dashboard/StatsCard';
 import RecentInvoices from '../components/dashboard/RecentInvoices';
@@ -49,8 +49,8 @@ const Dashboard = () => {
   const stats = [
     {
       title: "Today's Revenue",
-      value: `$${data.revenue_today.toLocaleString()}`,
-      icon: DollarSign,
+      value: `Rs. ${data.revenue_today.toLocaleString()}`,
+      icon: Banknote,
       color: "green",
       subtext: "vs yesterday" // You could implement trend logic if needed
     },
@@ -70,7 +70,7 @@ const Dashboard = () => {
     },
     {
       title: "Outstanding Amount",
-      value: `$${data.outstanding_amount.toLocaleString()}`,
+      value: `Rs. ${data.outstanding_amount.toLocaleString()}`,
       icon: AlertCircle,
       color: "purple",
       subtext: "total unpaid"
