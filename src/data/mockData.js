@@ -4,7 +4,7 @@ export const services = [
     name: 'Standard Oil Change',
     description: 'Complete oil change with synthetic blend oil and new filter.',
     category: 'Maintenance',
-    price: 49.99,
+    price: 4500,
     duration: '30 min'
   },
   {
@@ -12,7 +12,7 @@ export const services = [
     name: 'Brake Pad Replacement',
     description: 'Front or rear brake pad replacement with ceramic pads.',
     category: 'Brakes',
-    price: 149.99,
+    price: 8500,
     duration: '1 hr'
   },
   {
@@ -20,7 +20,7 @@ export const services = [
     name: 'Tire Rotation & Balance',
     description: 'Rotate all 4 tires and high-speed balancing.',
     category: 'Tires',
-    price: 39.99,
+    price: 2500,
     duration: '45 min'
   },
   {
@@ -28,7 +28,7 @@ export const services = [
     name: 'Check Engine Light Diagnostic',
     description: 'Computer diagnostic scan to identify engine issues.',
     category: 'Engine',
-    price: 89.99,
+    price: 3500,
     duration: '1 hr'
   },
   {
@@ -36,7 +36,7 @@ export const services = [
     name: 'AC Recharge',
     description: 'Recharge AC system with refrigerant and check for leaks.',
     category: 'Climate',
-    price: 129.99,
+    price: 6500,
     duration: '1 hr'
   }
 ];
@@ -47,7 +47,7 @@ export const spareParts = [
     name: 'Oil Filter',
     partNumber: 'OF-2024-A',
     category: 'Filters',
-    price: 12.50,
+    price: 1800,
     stock: 45,
     minStock: 10
   },
@@ -56,7 +56,7 @@ export const spareParts = [
     name: 'Brake Pads (Front)',
     partNumber: 'BP-F-001',
     category: 'Brakes',
-    price: 55.00,
+    price: 6500,
     stock: 8,
     minStock: 15
   },
@@ -65,7 +65,7 @@ export const spareParts = [
     name: 'Air Filter',
     partNumber: 'AF-2023-C',
     category: 'Filters',
-    price: 18.00,
+    price: 2200,
     stock: 25,
     minStock: 5
   },
@@ -74,7 +74,7 @@ export const spareParts = [
     name: 'Spark Plug',
     partNumber: 'SP-NGK-09',
     category: 'Engine',
-    price: 8.99,
+    price: 1500,
     stock: 12,
     minStock: 20
   },
@@ -83,7 +83,7 @@ export const spareParts = [
     name: 'Synthetic Oil (5W-30)',
     partNumber: 'OIL-SYN-5W30',
     category: 'Fluids',
-    price: 35.00,
+    price: 4800,
     stock: 60,
     minStock: 20
   }

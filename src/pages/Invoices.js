@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Eye, Trash, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Eye, Trash } from 'lucide-react';
 import Modal from '../components/common/Modal';
 import InvoiceDetailsModal from '../components/invoices/InvoiceDetailsModal';
 import { api } from '../utils/api';
-import './Customers.css';
+import './Invoices.css';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -203,7 +203,7 @@ const Invoices = () => {
     : [];
 
   return (
-    <div className="customers-page">
+    <div className="invoices-page">
       <div className="page-header">
         <h1>Invoices</h1>
       </div>
@@ -251,7 +251,7 @@ const Invoices = () => {
                 <td>{invoice.customer_name}</td>
                 <td>{invoice.vehicle_display}</td>
                 <td>{invoice.date}</td>
-                <td style={{fontWeight: 'bold'}}>${invoice.amount}</td>
+                <td style={{fontWeight: 'bold'}}>Rs. {invoice.amount}</td>
                 <td>
                     <select 
                         className={`badge ${invoice.status === 'Paid' ? 'status-paid' : 'status-pending'}`}
@@ -286,9 +286,26 @@ const Invoices = () => {
                     </select>
                 </td>
                 <td>
-                  <button className="text-btn" onClick={() => handleViewInvoice(invoice.id)}>
-                    <Eye size={18} />
-                  </button>
+                  <div className="actions-cell">
+                    <button 
+                      className="icon-btn view" 
+                      onClick={() => handleViewInvoice(invoice.id)}
+                      title="View Details"
+                    >
+                      <Eye size={18} />
+                    </button>
+                    <button 
+                      className="icon-btn delete" 
+                      onClick={() => {
+                        if(window.confirm('Are you sure you want to delete this invoice?')) {
+                             api.delete(`/invoices/${invoice.id}/`).then(fetchData);
+                        }
+                      }}
+                      title="Delete Invoice"
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -383,7 +400,7 @@ const Invoices = () => {
                 >
                     <option value="">-- Choose Service --</option>
                     {services.map(s => (
-                        <option key={s.id} value={s.id}>{s.name} (${s.price})</option>
+                        <option key={s.id} value={s.id}>{s.name} (Rs. {s.price})</option>
                     ))}
                 </select>
                 <button type="button" className="secondary-btn" onClick={addService}>Add</button>
@@ -394,7 +411,7 @@ const Invoices = () => {
                     {newInvoice.selected_services.map(s => (
                         <div key={s.id} className="added-item">
                             <span>{s.name}</span>
-                            <span className="price">${s.price}</span>
+                            <span className="price">Rs. {s.price}</span>
                             <button type="button" className="icon-btn" onClick={() => removeService(s.id)}>
                                 <Trash size={14} color="#ef4444"/>
                             </button>
@@ -415,7 +432,7 @@ const Invoices = () => {
                     <option value="">-- Choose Part --</option>
                     {parts.map(p => (
                         <option key={p.id} value={p.id}>
-                            {p.name} (Stock: {p.stock}) - ${p.price}
+                            {p.name} (Stock: {p.stock}) - Rs. {p.price}
                         </option>
                     ))}
                 </select>
@@ -435,7 +452,7 @@ const Invoices = () => {
                     {newInvoice.selected_parts.map(p => (
                         <div key={p.id} className="added-item">
                             <span>{p.name} (x{p.quantity})</span>
-                            <span className="price">${(p.price * p.quantity).toFixed(2)}</span>
+                            <span className="price">Rs. {(p.price * p.quantity).toFixed(2)}</span>
                             <button type="button" className="icon-btn" onClick={() => removePart(p.id)}>
                                 <Trash size={14} color="#ef4444"/>
                             </button>
@@ -447,7 +464,7 @@ const Invoices = () => {
             {/* --- Total --- */}
             <div className="invoice-total">
                 <span>Total Amount:</span>
-                <span className="amount">${calculateTotal()}</span>
+                <span className="amount">Rs. {calculateTotal()}</span>
             </div>
 
             <div className="modal-actions">

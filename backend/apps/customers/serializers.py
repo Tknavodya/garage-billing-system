@@ -7,8 +7,8 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['id', 'name', 'email', 'phone', 'address', 'created_at', 'visits']
+        fields = ['id', 'name', 'email', 'phone', 'address', 'status', 'notes', 'created_at', 'visits']
         read_only_fields = ['created_at']
 
     def get_visits(self, obj):
-        return obj.invoices.count()
+        return getattr(obj, 'visit_count', obj.invoices.count())

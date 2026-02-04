@@ -137,7 +137,7 @@ const Inventory = () => {
         </div>
       )}
 
-      <div className="actions-bar">
+      <div className="actions-bar" style={{ gap: '1rem' }}>
         <div className="search-bar" style={{width: '300px'}}>
           <Search size={20} className="search-icon" />
           <input 
@@ -190,7 +190,7 @@ const Inventory = () => {
                         {part.category}
                     </span>
                 </td>
-                <td>${part.price}</td>
+                <td>Rs. {part.price}</td>
                 <td style={{fontWeight: 600}}>
                     {part.stock}
                 </td>
@@ -264,7 +264,7 @@ const Inventory = () => {
                     </select>
                 </div>
                 <div className="form-group" style={{flex: 1}}>
-                    <label>Price ($)</label>
+                    <label>Price (Rs.)</label>
                     <input 
                         type="number" step="0.01"
                         required 
