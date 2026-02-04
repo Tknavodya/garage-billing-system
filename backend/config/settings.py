@@ -183,8 +183,4 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Authentication Backends
-AUTHENTICATION_BACKENDS = [
-    'apps.users.backends.EmailBackend',
-    'django.contrib.auth.backends.ModelBackend',
-]
+

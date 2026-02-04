@@ -1,0 +1,9 @@
+--- Connection Test ---
+Testing connection to localhost:3306...
+Success!
+Testing connection to 127.0.0.1:3306...
+Success!
+Testing connection to ::1:3306...
+Success!
+
+CONCLUSION: Check the results above.
