@@ -19,12 +19,12 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/customers', label: 'Customers', icon: Users },
-    { path: '/vehicles', label: 'Vehicles', icon: Car },
-    { path: '/invoices', label: 'Invoices', icon: FileText },
-    { path: '/services', label: 'Services', icon: Wrench },
-    { path: '/inventory', label: 'Inventory', icon: Package },
-    { path: '/settings', label: 'Settings', icon: Settings },
+    { path: '/dashboard/customers', label: 'Customers', icon: Users },
+    { path: '/dashboard/vehicles', label: 'Vehicles', icon: Car },
+    { path: '/dashboard/invoices', label: 'Invoices', icon: FileText },
+    { path: '/dashboard/services', label: 'Services', icon: Wrench },
+    { path: '/dashboard/inventory', label: 'Inventory', icon: Package },
+    { path: '/dashboard/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
