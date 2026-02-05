@@ -22,7 +22,7 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('garage_token');
-      const res = await fetch(`http://localhost:8000/api/invoices/${invoiceId}/`, {
+      const res = await fetch(`${API_BASE_URL}/invoices/${invoiceId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

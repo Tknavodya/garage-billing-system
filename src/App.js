@@ -13,12 +13,14 @@ import Invoices from './pages/Invoices';
 import Settings from './pages/Settings';
 import './App.css';
 
+import LandingPage from './pages/LandingPage';
+
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
   if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/" />; // Redirect to landing page instead of login if not authenticated
   
   return children;
 };
@@ -29,10 +31,11 @@ const App = () => {
       <AuthProvider>
         <DataProvider>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             
             {/* Protected Routes */}
-            <Route path="/" element={
+            <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
@@ -45,6 +48,9 @@ const App = () => {
               <Route path="inventory" element={<Inventory />} />
               <Route path="settings" element={<Settings />} />
             </Route>
+            
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </DataProvider>
       </AuthProvider>

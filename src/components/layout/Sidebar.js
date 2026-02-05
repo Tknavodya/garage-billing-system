@@ -18,7 +18,7 @@ const Sidebar = () => {
   const { logout } = useAuth();
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/customers', label: 'Customers', icon: Users },
     { path: '/vehicles', label: 'Vehicles', icon: Car },
     { path: '/invoices', label: 'Invoices', icon: FileText },
@@ -37,9 +37,9 @@ const Sidebar = () => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           return (
-            <Link 
-              key={item.path} 
-              to={item.path} 
+            <Link
+              key={item.path}
+              to={item.path}
               className={`nav-item ${isActive ? 'active' : ''}`}
             >
               <Icon size={20} />
