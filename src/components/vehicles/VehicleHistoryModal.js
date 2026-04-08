@@ -1,38 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../common/Modal';
 import { FileText, Calendar, Wrench } from 'lucide-react';
-import { API_BASE_URL } from '../../utils/api';
+import { api } from '../../utils/api';
 import '../common/SharedHistoryModal.css';
 
 const VehicleHistoryModal = ({ vehicleId, isOpen, onClose }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (isOpen && vehicleId) {
-            fetchHistory();
-        }
-    }, [isOpen, vehicleId]);
-
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('garage_token');
-            const res = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/history/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setHistory(data);
-            }
+            const data = await api.get(`/vehicles/${vehicleId}/history/`, { auth: false });
+            setHistory(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Failed to fetch vehicle history", err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [vehicleId]);
+
+    useEffect(() => {
+        if (isOpen && vehicleId) {
+            fetchHistory();
+        }
+    }, [isOpen, vehicleId, fetchHistory]);
 
     if (!isOpen) return null;
 

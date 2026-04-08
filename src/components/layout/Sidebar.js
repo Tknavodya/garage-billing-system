@@ -7,15 +7,17 @@ import {
   FileText, 
   Wrench, 
   Package, 
-  Settings, 
+  Settings,
+  UserCheck,
   LogOut 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import BrandLogo from '../shared/BrandLogo';
 import './Sidebar.css'; 
 
 const Sidebar = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,13 +26,15 @@ const Sidebar = () => {
     { path: '/invoices', label: 'Invoices', icon: FileText },
     { path: '/services', label: 'Services', icon: Wrench },
     { path: '/inventory', label: 'Inventory', icon: Package },
+    ...(user?.role === 'admin' ? [{ path: '/users', label: 'Users', icon: UserCheck }] : []),
     { path: '/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2>Garage Admin</h2>
+        <BrandLogo size="sidebar" />
+        <p className="sidebar-brand-subtitle">Workshop operations suite</p>
       </div>
       <nav className="sidebar-nav">
         {navItems.map((item) => {
@@ -42,7 +46,7 @@ const Sidebar = () => {
               to={item.path} 
               className={`nav-item ${isActive ? 'active' : ''}`}
             >
-              <Icon size={20} />
+              <span className="nav-icon"><Icon size={18} /></span>
               <span>{item.label}</span>
             </Link>
           );
@@ -50,7 +54,7 @@ const Sidebar = () => {
       </nav>
       <div className="sidebar-footer">
         <button onClick={logout} className="logout-btn">
-          <LogOut size={20} />
+          <LogOut size={18} />
           <span>Logout</span>
         </button>
       </div>

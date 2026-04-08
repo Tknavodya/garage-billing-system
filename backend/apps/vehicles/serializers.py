@@ -8,5 +8,5 @@ class VehicleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vehicle
-        fields = ['id', 'customer', 'customer_name', 'make', 'model', 'year', 'plate_number', 'created_at']
+        fields = ['id', 'customer', 'customer_name', 'make', 'model', 'year', 'plate_number', 'color', 'fuel_type', 'transmission', 'mileage', 'vin', 'created_at']
         read_only_fields = ['created_at']

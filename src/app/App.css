@@ -1,0 +1,11 @@
+.App {
+  min-height: 100vh;
+}
+
+.page-loading,
+.auth-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}

@@ -1,56 +1,102 @@
 
-export const API_BASE_URL = 'http://localhost:8001/api';
+export const API_BASE_URL = 'http://localhost:8000/api';
+
+const extractErrorMessage = async (response) => {
+    const errorData = await response.json().catch(() => ({}));
+
+    if (!errorData) {
+        return `API Error: ${response.status}`;
+    }
+
+    if (typeof errorData === 'string') {
+        return errorData;
+    }
+
+    if (Array.isArray(errorData)) {
+        return errorData[0] || `API Error: ${response.status}`;
+    }
+
+    if (errorData.detail) {
+        return errorData.detail;
+    }
+
+    const firstKey = Object.keys(errorData)[0];
+    if (firstKey) {
+        const firstValue = errorData[firstKey];
+        if (Array.isArray(firstValue)) {
+            return firstValue[0];
+        }
+        if (typeof firstValue === 'string') {
+            return firstValue;
+        }
+    }
+
+    return `API Error: ${response.status}`;
+};
 
 export const getAuthHeaders = () => {
     const token = localStorage.getItem('garage_token');
-    return {
+    const headers = {
         'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
     };
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
+};
+
+export const getPublicHeaders = () => ({
+    'Content-Type': 'application/json',
+});
+
+const resolveHeaders = (useAuth = true) => (useAuth ? getAuthHeaders() : getPublicHeaders());
+
+const requestJson = async (endpoint, options = {}, useAuth = true) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: resolveHeaders(useAuth),
+        ...options,
+    });
+
+    if (!response.ok) {
+        throw new Error(await extractErrorMessage(response));
+    }
+
+    return response.status === 204 ? null : response.json();
 };
 
 export const api = {
-    get: async (endpoint) => {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            headers: getAuthHeaders()
-        });
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
-        return response.json();
+    get: async (endpoint, options = {}) => {
+        return requestJson(endpoint, { method: 'GET' }, options.auth !== false);
     },
-    post: async (endpoint, data) => {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) { 
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `API Error: ${response.status}`);
-        }
-        return response.json();
+    post: async (endpoint, data, options = {}) => {
+        return requestJson(
+            endpoint,
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+            },
+            options.auth !== false,
+        );
     },
-    put: async (endpoint, data) => {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `API Error: ${response.status}`);
-        }
-        return response.json();
+    put: async (endpoint, data, options = {}) => {
+        return requestJson(
+            endpoint,
+            {
+                method: 'PUT',
+                body: JSON.stringify(data),
+            },
+            options.auth !== false,
+        );
     },
-    delete: async (endpoint) => {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
-        return response.status === 204 ? null : response.json();
+    delete: async (endpoint, options = {}) => {
+        return requestJson(
+            endpoint,
+            {
+                method: 'DELETE',
+            },
+            options.auth !== false,
+        );
     }
 };

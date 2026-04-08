@@ -1,0 +1,95 @@
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.brand-logo-mark {
+  flex: 0 0 auto;
+  display: block;
+  width: 100%;
+}
+
+.brand-logo-copy {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.brand-logo-name-main {
+  color: #102a4d;
+}
+
+.brand-logo-name-accent {
+  color: #1f8a5b;
+}
+
+.brand-logo-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.brand-logo--sidebar .brand-logo-mark {
+  width: 3.6rem;
+}
+
+.brand-logo--sidebar .brand-logo-copy {
+  font-size: 1.8rem;
+}
+
+.brand-logo--sidebar .brand-logo-name-main {
+  color: #0b3e71;
+}
+
+.brand-logo--sidebar .brand-logo-name-accent {
+  color: #36c981;
+}
+
+.brand-logo--auth .brand-logo-mark {
+  width: 4.8rem;
+}
+
+.brand-logo--auth .brand-logo-copy {
+  font-size: 2.2rem;
+}
+
+.brand-logo--auth .brand-logo-name-main {
+  color: #ffffff;
+}
+
+.brand-logo--auth .brand-logo-name-accent {
+  color: #36c981;
+}
+
+.brand-logo--compact .brand-logo-mark {
+  width: 3rem;
+}
+
+.brand-logo--compact .brand-logo-copy {
+  font-size: 1.45rem;
+}
+
+@media (max-width: 640px) {
+  .brand-logo--sidebar .brand-logo-mark {
+    width: 3.2rem;
+  }
+
+  .brand-logo--sidebar .brand-logo-copy {
+    font-size: 1.6rem;
+  }
+
+  .brand-logo--auth .brand-logo-mark {
+    width: 4.2rem;
+  }
+
+  .brand-logo--auth .brand-logo-copy {
+    font-size: 1.95rem;
+  }
+}

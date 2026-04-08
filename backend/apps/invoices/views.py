@@ -6,12 +6,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import filters
 from .models import Invoice
 from .serializers import InvoiceSerializer
+from decimal import Decimal
 
 from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+
+def format_lkr(value):
+    amount = Decimal(str(value or 0)).quantize(Decimal('0.01'))
+    return f"Rs. {amount:,.2f}"
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()
@@ -42,13 +48,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         # Header
         elements.append(Paragraph(f"Invoice: {invoice.invoice_number}", title_style))
         elements.append(Paragraph(f"Date: {invoice.date}", normal_style))
+        if invoice.due_date:
+            elements.append(Paragraph(f"Due Date: {invoice.due_date}", normal_style))
+        if invoice.payment_method:
+            elements.append(Paragraph(f"Payment Method: {invoice.payment_method}", normal_style))
         elements.append(Paragraph(f"Status: {invoice.status}", normal_style))
         elements.append(Spacer(1, 12))
         
         # Customer Info
         elements.append(Paragraph("<b>Customer Details:</b>", normal_style))
         elements.append(Paragraph(f"Name: {invoice.customer.name}", normal_style))
-        elements.append(Paragraph(f"Vehicle: {invoice.vehicle.make} {invoice.vehicle.model} ({invoice.vehicle.plate_number})", normal_style))
+        if invoice.vehicle:
+            elements.append(Paragraph(f"Vehicle: {invoice.vehicle.make} {invoice.vehicle.model} ({invoice.vehicle.plate_number})", normal_style))
+        else:
+            elements.append(Paragraph("Vehicle: N/A", normal_style))
         elements.append(Spacer(1, 20))
         
         # Data for Table
@@ -58,7 +71,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         for svc in invoice.services.all():
             data.append([
                 svc.service.name, 'Service', '1', 
-                f"${svc.price}", f"${svc.price}"
+                format_lkr(svc.price), format_lkr(svc.price)
             ])
             
         # Parts
@@ -66,11 +79,17 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             total = part.price * part.quantity
             data.append([
                 f"{part.part.name} ({part.part.part_number})", 'Part', str(part.quantity), 
-                f"${part.price}", f"${total:.2f}"
+                format_lkr(part.price), format_lkr(total)
             ])
             
-        # Total Row
-        data.append(['', '', '', 'Total Amount:', f"${invoice.amount}"])
+        # Total Rows
+        data.append(['', '', '', 'Subtotal:', format_lkr(invoice.subtotal)])
+        data.append(['', '', '', 'Tax:', format_lkr(invoice.tax_amount)])
+        data.append(['', '', '', 'Discount:', f"-{format_lkr(invoice.discount_amount)}"])
+        data.append(['', '', '', 'Total Amount:', format_lkr(invoice.amount)])
+
+        item_end_row = max(len(data) - 5, 1)
+        total_start_row = max(len(data) - 4, 1)
         
         # Table Styling
         table = Table(data, colWidths=[250, 60, 40, 80, 80])
@@ -82,18 +101,24 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-            ('BACKGROUND', (0, 1), (-1, -2), colors.white),
-            ('GRID', (0, 0), (-1, -2), 1, colors.HexColor('#f1f5f9')),
+            ('BACKGROUND', (0, 1), (-1, item_end_row), colors.white),
+            ('GRID', (0, 0), (-1, item_end_row), 1, colors.HexColor('#f1f5f9')),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#cbd5e1')),
-            ('FONTNAME', (-2, -1), (-1, -1), 'Helvetica-Bold'), # Total Data
-            ('TEXTCOLOR', (-2, -1), (-1, -1), colors.black),
-            ('TOPPADDING', (0, -1), (-1, -1), 12),
+            ('FONTNAME', (-2, -4), (-1, -1), 'Helvetica-Bold'),
+            ('TEXTCOLOR', (-2, -4), (-1, -1), colors.black),
+            ('TOPPADDING', (0, total_start_row), (-1, -1), 10),
         ]))
         
         elements.append(table)
         elements.append(Spacer(1, 40))
         
         # Footer
+        if invoice.notes:
+            elements.append(Spacer(1, 16))
+            elements.append(Paragraph("<b>Notes</b>", normal_style))
+            elements.append(Paragraph(invoice.notes, normal_style))
+
+        elements.append(Spacer(1, 16))
         elements.append(Paragraph("Thank you for your business!", normal_style))
         
         doc.build(elements)

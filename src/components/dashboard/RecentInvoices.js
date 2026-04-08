@@ -15,7 +15,10 @@ const RecentInvoices = ({ invoices, onView }) => {
   return (
     <div className="recent-invoices-card">
       <div className="card-header">
-        <h2>Recent Invoices</h2>
+        <div>
+          <h2>Recent Invoices</h2>
+          <p>Latest billing activity across the workshop.</p>
+        </div>
         <button className="view-all-btn">View All</button>
       </div>
       <div className="table-responsive">

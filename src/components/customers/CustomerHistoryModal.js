@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Modal from '../common/Modal';
-import { FileText, Car, Calendar } from 'lucide-react';
+import { FileText, Car } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/api';
 import '../common/SharedHistoryModal.css';
 
@@ -9,13 +9,7 @@ const CustomerHistoryModal = ({ customerId, isOpen, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('invoices');
 
-    useEffect(() => {
-        if (isOpen && customerId) {
-            fetchHistory();
-        }
-    }, [isOpen, customerId]);
-
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('garage_token');
@@ -33,7 +27,13 @@ const CustomerHistoryModal = ({ customerId, isOpen, onClose }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [customerId]);
+
+    useEffect(() => {
+        if (isOpen && customerId) {
+            fetchHistory();
+        }
+    }, [isOpen, customerId, fetchHistory]);
 
     if (!isOpen) return null;
 

@@ -28,6 +28,8 @@ This document explains the JWT-based authentication system implemented for the G
 POST /api/users/auth/login/      - User login (get tokens)
 POST /api/users/auth/refresh/    - Refresh access token
 POST /api/users/auth/token/      - Alternative token endpoint
+POST /api/users/auth/password-reset/ - Send password reset email
+POST /api/users/auth/password-reset/confirm/ - Set a new password from reset link
 POST /api/users/logout/          - Logout (blacklist refresh token)
 ```
 
@@ -54,12 +56,31 @@ Ensure your `.env` file in the backend directory contains:
 ```env
 DEBUG=True
 SECRET_KEY=your-secret-key-here
+FRONTEND_URL=http://localhost:3000
 DATABASE_NAME=garage_management
 DATABASE_USER=root
 DATABASE_PASSWORD=your-password
 DATABASE_HOST=localhost
 DATABASE_PORT=3306
 ```
+
+For real inbox delivery, use this Gmail SMTP block in `.env`:
+```env
+DEBUG=False
+FRONTEND_URL=http://localhost:3000
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your-gmail-address@gmail.com
+EMAIL_HOST_PASSWORD=your-gmail-app-password
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=GarageCore <your-gmail-address@gmail.com>
+```
+
+Important: Gmail requires an app password. Use a normal Gmail account password only if your account is configured to allow it, which is uncommon.
+
+If you use another provider later, keep the same variable names and replace only the host, username, password, and from-address.
 
 ### 3. Run Migrations
 ```bash

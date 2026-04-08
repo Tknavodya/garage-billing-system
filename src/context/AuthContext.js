@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('garage_user');
+    localStorage.removeItem('garage_token');
   };
 
   return (

@@ -10,12 +10,28 @@ class Invoice(models.Model):
         ('Overdue', 'Overdue'),
     ]
 
+    PAYMENT_METHOD_CHOICES = [
+        ('Cash', 'Cash'),
+        ('Card', 'Card'),
+        ('Bank Transfer', 'Bank Transfer'),
+        ('UPI', 'UPI'),
+        ('Wallet', 'Wallet'),
+        ('Other', 'Other'),
+    ]
+
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='invoices')
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
     invoice_number = models.CharField(max_length=20, unique=True, blank=True)
     date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
+    payment_method = models.CharField(max_length=40, choices=PAYMENT_METHOD_CHOICES, default='Cash')
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    notes = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

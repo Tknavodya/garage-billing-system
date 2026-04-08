@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,7 +15,10 @@ from .serializers import (
     UserLoginSerializer,
     UserSerializer,
     UserCreateSerializer,
-    ChangePasswordSerializer
+    PublicRegistrationSerializer,
+    ChangePasswordSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,6 +59,25 @@ class UserLoginView(TokenObtainPairView):
             'access': str(refresh.access_token),
             'user': UserSerializer(user).data
         }, status=status.HTTP_200_OK)
+
+
+class PublicRegistrationView(APIView):
+    """Public account request endpoint."""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = PublicRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        return Response(
+            {
+                'message': 'Account request submitted. An administrator will review and activate access.',
+                'user': UserSerializer(user).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class UserLogoutView(viewsets.GenericViewSet):
@@ -100,24 +123,57 @@ class UserViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """Set permissions based on action."""
-        if self.action == 'create':
-            # Only admin users can create new users
+        if self.action in {'me', 'update_profile', 'change_password'}:
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsAuthenticated]
         
         return [permission() for permission in permission_classes]
-    
-    def create(self, request, *args, **kwargs):
-        """Create new user (admin only)."""
-        # Check if user is admin
+
+    def _require_admin(self, request):
         if request.user.role != 'admin':
             return Response(
-                {"error": "Only admin users can create new users"}, 
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Only admin users can manage users"},
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
+        return None
+
+    def list(self, request, *args, **kwargs):
+        if (response := self._require_admin(request)) is not None:
+            return response
+
+        return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        if (response := self._require_admin(request)) is not None:
+            return response
+
+        return super().retrieve(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """Create new user (admin only)."""
+        if (response := self._require_admin(request)) is not None:
+            return response
+
         return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if (response := self._require_admin(request)) is not None:
+            return response
+
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if (response := self._require_admin(request)) is not None:
+            return response
+
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if (response := self._require_admin(request)) is not None:
+            return response
+
+        return super().destroy(request, *args, **kwargs)
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -162,11 +218,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def toggle_active(self, request, pk=None):
         """Toggle user active status (admin only)."""
-        if request.user.role != 'admin':
-            return Response(
-                {"error": "Only admin users can toggle user status"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if (response := self._require_admin(request)) is not None:
+            return response
         
         user = self.get_object()
         user.is_active = not user.is_active
@@ -194,3 +247,39 @@ class TokenRefreshViewCustom(TokenRefreshView):
                 {"error": "Invalid or expired refresh token"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class PasswordResetRequestView(APIView):
+    """Send a password reset email to the requested address."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {
+                "message": (
+                    "If an account exists for that email, a reset OTP has been sent."
+                )
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """Complete a password reset using a valid token."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"message": "Password reset successfully."},
+            status=status.HTTP_200_OK,
+        )

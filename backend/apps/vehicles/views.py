@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework import filters
 from .models import Vehicle
 from .serializers import VehicleSerializer
@@ -10,7 +10,7 @@ from .serializers import VehicleSerializer
 class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['plate_number', 'make', 'model', 'customer__name']
 

@@ -1,0 +1,224 @@
+.customers-page {
+  gap: 1.1rem;
+}
+
+.customers-page .toolbar {
+  padding: 1rem 1.1rem;
+}
+
+.customer-table-shell {
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.customer-table-shell table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.customer-table-shell thead th {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.92));
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.customer-table-shell tbody td {
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  vertical-align: middle;
+}
+
+.customer-table-shell tbody tr {
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.customer-table-shell tbody tr:hover {
+  background: rgba(236, 244, 255, 0.6);
+}
+
+.customer-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.customer-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(17, 78, 138, 0.16), rgba(29, 122, 226, 0.2));
+  color: var(--primary);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  box-shadow: 0 14px 28px rgba(17, 78, 138, 0.12);
+  flex: 0 0 auto;
+}
+
+.customer-name-stack {
+  min-width: 0;
+}
+
+.customer-name {
+  display: block;
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.customer-subtext {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.contact-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.contact-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
+.contact-line svg {
+  color: var(--muted-soft);
+  flex: 0 0 auto;
+}
+
+.visit-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.visit-cell strong {
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1;
+}
+
+.visit-cell span {
+  font-size: 0.74rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.customer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.icon-action-btn,
+.history-btn {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.icon-action-btn {
+  width: 42px;
+  height: 42px;
+}
+
+.history-btn {
+  padding: 0.7rem 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.icon-action-btn:hover,
+.history-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
+}
+
+.icon-action-btn.edit:hover,
+.history-btn:hover {
+  color: var(--primary);
+  border-color: rgba(17, 78, 138, 0.22);
+  background: rgba(17, 78, 138, 0.08);
+}
+
+.icon-action-btn.delete:hover {
+  color: var(--danger);
+  border-color: rgba(211, 79, 79, 0.22);
+  background: rgba(211, 79, 79, 0.08);
+}
+
+.icon-action-btn.delete {
+  color: var(--danger);
+}
+
+.customers-page .empty-state-card {
+  margin-top: 0.25rem;
+}
+
+.customers-page .customer-form {
+  gap: 1rem;
+}
+
+.customers-page .form-group label {
+  color: var(--text-soft);
+}
+
+.customers-page .form-control {
+  border-radius: 16px;
+}
+
+.customers-page .modal-actions {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .customer-table-shell {
+    overflow-x: auto;
+  }
+
+  .customer-table-shell table {
+    min-width: 760px;
+  }
+}
+
+@media (max-width: 640px) {
+  .customers-page .toolbar {
+    padding: 0.9rem;
+  }
+
+  .icon-action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .history-btn {
+    padding: 0.65rem 0.8rem;
+  }
+}

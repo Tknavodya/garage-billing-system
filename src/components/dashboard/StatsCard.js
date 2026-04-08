@@ -6,7 +6,7 @@ const StatsCard = ({ title, value, icon: Icon, trend, color, subtext }) => {
   return (
     <div className="stats-card">
       <div className="stats-header">
-        <div className={`icon-wrapper ${color}`}>
+        <div className={`icon-wrapper ${color || 'blue'}`}>
           <Icon size={24} />
         </div>
         {trend && (

@@ -97,3 +97,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     def has_module_perms(self, app_label):
         """Check if user has permissions to view the app."""
         return self.is_superuser or self.role == 'admin'
+
+
+class PasswordResetOTP(models.Model):
+    """One-time password for email-based password reset."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_otps')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'password_reset_otps'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"OTP for {self.user.email}"

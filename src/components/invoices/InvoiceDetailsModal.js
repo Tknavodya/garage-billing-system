@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { X, Printer, Download } from 'lucide-react';
-import Modal from '../common/Modal'; 
-import { api, API_BASE_URL } from '../../utils/api';
+import React, { useEffect, useState, useCallback } from 'react';
+import { X, Download } from 'lucide-react';
+import { API_BASE_URL } from '../../utils/api';
 import './InvoiceDetailsModal.css';
+
+const formatMoney = (value) => Number(value || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
 
 // Assuming we want reuse the existing Modal or create a specific one. 
 // Since we have 'components/common/Modal', let's use it but customized.
@@ -12,30 +16,30 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && invoiceId) {
-      fetchInvoiceDetails();
-    }
-  }, [isOpen, invoiceId]);
-
-  const fetchInvoiceDetails = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('garage_token');
-      const res = await fetch(`http://localhost:8000/api/invoices/${invoiceId}/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const fetchInvoiceDetails = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('garage_token');
+            const res = await fetch(`${API_BASE_URL}/invoices/${invoiceId}/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                setInvoice(await res.json());
+            }
+        } catch (err) {
+            console.error("Failed to fetch invoice details", err);
+        } finally {
+            setLoading(false);
         }
-      });
-      if (res.ok) {
-        setInvoice(await res.json());
-      }
-    } catch (err) {
-      console.error("Failed to fetch invoice details", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, [invoiceId]);
+
+    useEffect(() => {
+        if (isOpen && invoiceId) {
+            fetchInvoiceDetails();
+        }
+    }, [isOpen, invoiceId, fetchInvoiceDetails]);
 
   const handleDownloadPDF = async () => {
       try {
@@ -89,17 +93,26 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
                         </div>
                         <div className="invoice-date">
                             <label>Date:</label> {invoice.date}
+                            <label>Due:</label> {invoice.due_date || '—'}
                         </div>
                     </div>
 
-                    <div className="customer-vehicle-section">
+                    <div className="customer-vehicle-section invoice-meta-grid">
                         <div className="info-block">
                             <label>Customer</label>
                             <p>{invoice.customer_name}</p>
                         </div>
                         <div className="info-block">
                             <label>Vehicle</label>
-                            <p>{invoice.vehicle_display}</p>
+                            <p>{invoice.vehicle_display || 'N/A'}</p>
+                        </div>
+                        <div className="info-block">
+                            <label>Payment method</label>
+                            <p>{invoice.payment_method || 'Cash'}</p>
+                        </div>
+                        <div className="info-block">
+                            <label>Subtotal</label>
+                            <p>Rs. {formatMoney(invoice.subtotal ?? invoice.amount)}</p>
                         </div>
                     </div>
 
@@ -157,10 +170,31 @@ const InvoiceDetailsModal = ({ isOpen, onClose, invoiceId }) => {
                     </div>
 
                     <div className="invoice-footer">
-                        <div className="total-amount">
-                            <label>Total Amount:</label>
-                            <span>Rs. {invoice.amount}</span>
+                        <div className="invoice-totals-grid">
+                            <div className="total-line">
+                                <span>Subtotal</span>
+                                <strong>Rs. {formatMoney(invoice.subtotal ?? invoice.amount)}</strong>
+                            </div>
+                            <div className="total-line">
+                                <span>Tax</span>
+                                <strong>Rs. {formatMoney(invoice.tax_amount)}</strong>
+                            </div>
+                            <div className="total-line">
+                                <span>Discount</span>
+                                <strong>Rs. {formatMoney(invoice.discount_amount)}</strong>
+                            </div>
+                            <div className="total-line total-line-strong">
+                                <span>Total Amount</span>
+                                <strong>Rs. {formatMoney(invoice.amount)}</strong>
+                            </div>
                         </div>
+
+                        {invoice.notes && (
+                            <div className="invoice-notes-block">
+                                <label>Notes</label>
+                                <p>{invoice.notes}</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="invoice-actions">
